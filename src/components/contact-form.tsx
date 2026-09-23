@@ -4,6 +4,11 @@ import * as React from "react";
 import {useTranslations} from "next-intl";
 
 import {Button} from "@/components/ui/button";
+import {DatePicker} from "@/components/ui/date-picker";
+import {Field, FieldError, FieldLabel} from "@/components/ui/field";
+import {Input} from "@/components/ui/input";
+import {Textarea} from "@/components/ui/textarea";
+import {parseContactInput} from "@/lib/contact-validation";
 import type {Locale} from "@/lib/domain";
 
 export type ContactResponse =
@@ -49,13 +54,17 @@ export function mapContactResponse(statusCode: number, payload: ContactResponse,
   return {fieldErrors: {}, status: {kind: "error", message: messages.retry}};
 }
 
-type Values = {name: string; email: string; whatsapp: string; eventType: "wedding" | "events" | "other"; eventDate: string; eventLocation: string; message: string};
+export type ContactFormValues = {name: string; email: string; whatsapp: string; eventType: "wedding" | "events" | "other"; eventDate: string; eventLocation: string; message: string};
 
-const emptyValues: Values = {name: "", email: "", whatsapp: "", eventType: "wedding", eventDate: "", eventLocation: "", message: ""};
+const emptyValues: ContactFormValues = {name: "", email: "", whatsapp: "", eventType: "wedding", eventDate: "", eventLocation: "", message: ""};
+
+export function validateContactValues(values: ContactFormValues, submissionKey: string): ReturnType<typeof parseContactInput> {
+  return parseContactInput({...values, submissionKey});
+}
 
 export function ContactForm({locale}: {locale: Locale}): React.ReactElement {
   const t = useTranslations();
-  const [values, setValues] = React.useState<Values>(emptyValues);
+  const [values, setValues] = React.useState<ContactFormValues>(emptyValues);
   const [pending, setPending] = React.useState(false);
   const [status, setStatus] = React.useState<ContactStatus | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
@@ -79,14 +88,22 @@ export function ContactForm({locale}: {locale: Locale}): React.ReactElement {
   const submit = async (): Promise<void> => {
     if (pending) return;
     submissionKey.current ??= crypto.randomUUID();
-    setPending(true);
     setStatus(null);
     setFieldErrors({});
+    const validation = validateContactValues(values, submissionKey.current);
+    if (!validation.ok) {
+      const mapped = mapContactResponse(400, {ok: false, code: "VALIDATION_FAILED", fieldErrors: validation.fieldErrors}, messages);
+      setFieldErrors(mapped.fieldErrors);
+      setStatus(mapped.status);
+      return;
+    }
+
+    setPending(true);
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {"content-type": "application/json"},
-        body: JSON.stringify({...values, submissionKey: submissionKey.current}),
+        body: JSON.stringify(validation.value),
       });
       const payload = await response.json() as ContactResponse;
       const mapped = mapContactResponse(response.status, payload, messages);
@@ -106,47 +123,51 @@ export function ContactForm({locale}: {locale: Locale}): React.ReactElement {
   };
 
   const errorFor = (field: string): string | undefined => fieldErrors[field]?.join(" ") || undefined;
+  const errorsFor = (field: string): {message: string}[] | undefined => {
+    const message = errorFor(field);
+    return message ? [{message}] : undefined;
+  };
 
   return (
     <form lang={locale} className="space-y-5" onSubmit={(event) => { event.preventDefault(); void submit(); }} noValidate>
-      <div className="grid gap-2">
-        <label htmlFor="contact-name">{t("contact.name")}</label>
-        <input className="min-w-0 w-full border border-[var(--line)] bg-transparent px-3 py-2" id="contact-name" name="name" value={values.name} onChange={(event) => setValues({...values, name: event.currentTarget.value})} aria-invalid={Boolean(errorFor("name"))} aria-describedby={errorFor("name") ? "contact-name-error" : undefined} required />
-        {errorFor("name") ? <p id="contact-name-error" role="alert">{errorFor("name")}</p> : null}
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="contact-email">{t("contact.email")}</label>
-        <input className="min-w-0 w-full border border-[var(--line)] bg-transparent px-3 py-2" id="contact-email" name="email" type="email" value={values.email} onChange={(event) => setValues({...values, email: event.currentTarget.value})} aria-invalid={Boolean(errorFor("email"))} aria-describedby={errorFor("email") ? "contact-email-error" : undefined} />
-        {errorFor("email") ? <p id="contact-email-error" role="alert">{errorFor("email")}</p> : null}
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="contact-whatsapp">{t("contact.whatsapp")}</label>
-        <input className="min-w-0 w-full border border-[var(--line)] bg-transparent px-3 py-2" id="contact-whatsapp" name="whatsapp" type="tel" value={values.whatsapp} onChange={(event) => setValues({...values, whatsapp: event.currentTarget.value})} aria-invalid={Boolean(errorFor("whatsapp"))} aria-describedby={errorFor("whatsapp") ? "contact-whatsapp-error" : undefined} />
-        {errorFor("whatsapp") ? <p id="contact-whatsapp-error" role="alert">{errorFor("whatsapp")}</p> : null}
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="contact-event-type">{t("contact.eventType")}</label>
-        <select className="min-w-0 w-full border border-[var(--line)] bg-transparent px-3 py-2" id="contact-event-type" name="eventType" value={values.eventType} onChange={(event) => setValues({...values, eventType: event.currentTarget.value as Values["eventType"]})}>
+      <Field data-invalid={Boolean(errorFor("name"))}>
+        <FieldLabel htmlFor="contact-name">{t("contact.name")}</FieldLabel>
+        <Input id="contact-name" name="name" value={values.name} onChange={(event) => setValues({...values, name: event.currentTarget.value})} aria-invalid={Boolean(errorFor("name"))} aria-describedby={errorFor("name") ? "contact-name-error" : undefined} required />
+        <FieldError id="contact-name-error" errors={errorsFor("name")} />
+      </Field>
+      <Field data-invalid={Boolean(errorFor("email"))}>
+        <FieldLabel htmlFor="contact-email">{t("contact.email")}</FieldLabel>
+        <Input id="contact-email" name="email" type="email" value={values.email} onChange={(event) => setValues({...values, email: event.currentTarget.value})} aria-invalid={Boolean(errorFor("email"))} aria-describedby={errorFor("email") ? "contact-email-error" : undefined} />
+        <FieldError id="contact-email-error" errors={errorsFor("email")} />
+      </Field>
+      <Field data-invalid={Boolean(errorFor("whatsapp"))}>
+        <FieldLabel htmlFor="contact-whatsapp">{t("contact.whatsapp")}</FieldLabel>
+        <Input id="contact-whatsapp" name="whatsapp" type="tel" value={values.whatsapp} onChange={(event) => setValues({...values, whatsapp: event.currentTarget.value})} aria-invalid={Boolean(errorFor("whatsapp"))} aria-describedby={errorFor("whatsapp") ? "contact-whatsapp-error" : undefined} />
+        <FieldError id="contact-whatsapp-error" errors={errorsFor("whatsapp")} />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="contact-event-type">{t("contact.eventType")}</FieldLabel>
+        <select className="min-h-11 min-w-0 w-full rounded-[var(--radius)] border border-[var(--line)] bg-transparent px-3 py-2" id="contact-event-type" name="eventType" value={values.eventType} onChange={(event) => setValues({...values, eventType: event.currentTarget.value as ContactFormValues["eventType"]})}>
           <option value="wedding">{t("category.wedding")}</option>
           <option value="events">{t("category.events")}</option>
           <option value="other">{t("category.other")}</option>
         </select>
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="contact-event-date">{t("contact.eventDate")}</label>
-        <input className="min-w-0 w-full border border-[var(--line)] bg-transparent px-3 py-2" id="contact-event-date" name="eventDate" type="date" value={values.eventDate} onChange={(event) => setValues({...values, eventDate: event.currentTarget.value})} aria-invalid={Boolean(errorFor("eventDate"))} aria-describedby={errorFor("eventDate") ? "contact-event-date-error" : undefined} />
-        {errorFor("eventDate") ? <p id="contact-event-date-error" role="alert">{errorFor("eventDate")}</p> : null}
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="contact-event-location">{t("contact.eventLocation")}</label>
-        <input className="min-w-0 w-full border border-[var(--line)] bg-transparent px-3 py-2" id="contact-event-location" name="eventLocation" value={values.eventLocation} onChange={(event) => setValues({...values, eventLocation: event.currentTarget.value})} aria-invalid={Boolean(errorFor("eventLocation"))} aria-describedby={errorFor("eventLocation") ? "contact-event-location-error" : undefined} />
-        {errorFor("eventLocation") ? <p id="contact-event-location-error" role="alert">{errorFor("eventLocation")}</p> : null}
-      </div>
-      <div className="grid gap-2">
-        <label htmlFor="contact-message">{t("contact.message")}</label>
-        <textarea className="min-w-0 w-full border border-[var(--line)] bg-transparent px-3 py-2" id="contact-message" name="message" value={values.message} onChange={(event) => setValues({...values, message: event.currentTarget.value})} aria-invalid={Boolean(errorFor("message"))} aria-describedby={errorFor("message") ? "contact-message-error" : undefined} required />
-        {errorFor("message") ? <p id="contact-message-error" role="alert">{errorFor("message")}</p> : null}
-      </div>
+      </Field>
+      <Field data-invalid={Boolean(errorFor("eventDate"))}>
+        <FieldLabel htmlFor="contact-event-date">{t("contact.eventDate")}</FieldLabel>
+        <DatePicker id="contact-event-date" name="eventDate" value={values.eventDate} onChange={(eventDate) => setValues({...values, eventDate})} locale={locale} placeholder={t("contact.pickDate")} aria-invalid={Boolean(errorFor("eventDate"))} aria-describedby={errorFor("eventDate")}/>
+        <FieldError id="contact-event-date-error" errors={errorsFor("eventDate")} />
+      </Field>
+      <Field data-invalid={Boolean(errorFor("eventLocation"))}>
+        <FieldLabel htmlFor="contact-event-location">{t("contact.eventLocation")}</FieldLabel>
+        <Input id="contact-event-location" name="eventLocation" value={values.eventLocation} onChange={(event) => setValues({...values, eventLocation: event.currentTarget.value})} aria-invalid={Boolean(errorFor("eventLocation"))} aria-describedby={errorFor("eventLocation") ? "contact-event-location-error" : undefined} />
+        <FieldError id="contact-event-location-error" errors={errorsFor("eventLocation")} />
+      </Field>
+      <Field data-invalid={Boolean(errorFor("message"))}>
+        <FieldLabel htmlFor="contact-message">{t("contact.message")}</FieldLabel>
+        <Textarea id="contact-message" name="message" value={values.message} onChange={(event) => setValues({...values, message: event.currentTarget.value})} aria-invalid={Boolean(errorFor("message"))} aria-describedby={errorFor("message") ? "contact-message-error" : undefined} required />
+        <FieldError id="contact-message-error" errors={errorsFor("message")} />
+      </Field>
       <Button type="submit" className="min-h-11" disabled={pending}>{pending ? t("contact.submitting") : t("contact.submit")}</Button>
       {status ? <div className="flex flex-wrap items-center gap-3" role="alert" aria-live="polite">
         <span>{status.message}</span>

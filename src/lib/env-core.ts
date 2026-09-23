@@ -7,6 +7,7 @@ export type ServerEnv = {
   readonly BETTER_AUTH_SECRET: string;
   readonly APP_URL: string;
   readonly ADMIN_EMAIL: string;
+  readonly LOCAL_AUTH_BYPASS: boolean;
   readonly GOOGLE_CLIENT_ID: string;
   readonly GOOGLE_CLIENT_SECRET: string;
   readonly CLOUDINARY_CLOUD_NAME: string;
@@ -48,6 +49,7 @@ export function getServerEnv(): ServerEnv {
     get ADMIN_EMAIL() {
       return value("ADMIN_EMAIL").toLowerCase();
     },
+    LOCAL_AUTH_BYPASS: process.env.LOCAL_AUTH_BYPASS === "true",
     get GOOGLE_CLIENT_ID() {
       return value("GOOGLE_CLIENT_ID");
     },

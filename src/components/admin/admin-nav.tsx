@@ -2,14 +2,23 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {useRouter} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
+import {Camera, Images, LayoutDashboard, Link2, LogOut, MessageSquare, Settings} from "lucide-react";
 
-import {Button} from "@/components/ui/button";
 import {authClient} from "@/lib/auth-client";
+import {Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarSeparator} from "@/components/ui/sidebar";
+
+const navigation = [
+  {label: "Dashboard", href: "/admin", icon: LayoutDashboard},
+  {label: "Albums", href: "/admin/albums", icon: Images},
+  {label: "Messages", href: "/admin/messages", icon: MessageSquare},
+  {label: "Private links", href: "/admin/private-links", icon: Link2},
+  {label: "Settings", href: "/admin/settings", icon: Settings},
+] as const;
 
 export function AdminNav({name}: {name: string | null}): React.ReactElement {
   const router = useRouter();
-  const [open, setOpen] = React.useState(false);
+  const pathname = usePathname() ?? "";
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -23,7 +32,6 @@ export function AdminNav({name}: {name: string | null}): React.ReactElement {
         setError("Could not sign out. Try again.");
         return;
       }
-      setOpen(false);
       router.push("/admin/login");
     } catch {
       setError("Could not sign out. Try again.");
@@ -33,30 +41,54 @@ export function AdminNav({name}: {name: string | null}): React.ReactElement {
   };
 
   return (
-    <header className="border-b border-[var(--line)]">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-        <Link className="font-serif text-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--focus)]" href="/admin" onClick={() => setOpen(false)}>Elhaq Photography</Link>
-        <button
-          type="button"
-          className="inline-flex min-h-11 items-center md:hidden"
-          aria-expanded={open}
-          aria-controls="admin-navigation"
-          aria-label={open ? "Close menu" : "Menu"}
-          onClick={() => setOpen((value) => !value)}
-        >
-          {open ? "Close menu" : "Menu"}
-        </button>
-        <nav id="admin-navigation" aria-label="Admin navigation" className={open ? "flex basis-full flex-col gap-2 md:w-auto md:basis-auto md:flex-row md:items-center" : "hidden gap-2 md:flex md:items-center"}>
-          <Link className="inline-flex min-h-11 items-center px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]" href="/admin" onClick={() => setOpen(false)}>Dashboard</Link>
-          <Link className="inline-flex min-h-11 items-center px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]" href="/admin/albums" onClick={() => setOpen(false)}>Albums</Link>
-          <Link className="inline-flex min-h-11 items-center px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]" href="/admin/settings" onClick={() => setOpen(false)}>Settings</Link>
-          <Link className="inline-flex min-h-11 items-center px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]" href="/admin/private-links" onClick={() => setOpen(false)}>Private links</Link>
-          <Link className="inline-flex min-h-11 items-center px-3 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]" href="/admin/messages" onClick={() => setOpen(false)}>Messages</Link>
-          <Button type="button" variant="outline" onClick={() => void signOut()} disabled={pending}>{pending ? "Signing out" : "Sign out"}</Button>
-        </nav>
-      </div>
-      {name ? <p className="mx-auto max-w-6xl px-6 pb-3 text-sm">Signed in as {name}</p> : null}
-      {error ? <p className="mx-auto max-w-6xl px-6 pb-3 text-sm" role="alert">{error}</p> : null}
-    </header>
+    <Sidebar variant="inset" collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg" tooltip="Elhaq Photography">
+              <Link href="/admin">
+                <Camera aria-hidden="true" />
+                <span className="font-serif text-base">Elhaq Photography</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navigation.map(({label, href, icon: Icon}) => {
+                const isActive = pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
+                return (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
+                      <Link href={href} aria-current={isActive ? "page" : undefined}>
+                        <Icon aria-hidden="true" />
+                        <span>{label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        {name ? <p className="truncate px-2 text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">Signed in as {name}</p> : null}
+        <SidebarSeparator />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton type="button" tooltip={pending ? "Signing out" : "Sign out"} onClick={() => void signOut()} disabled={pending}>
+              <LogOut aria-hidden="true" />
+              <span>{pending ? "Signing out" : "Sign out"}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        {error ? <p className="px-2 text-xs text-sidebar-foreground group-data-[collapsible=icon]:hidden" role="alert">{error}</p> : null}
+      </SidebarFooter>
+    </Sidebar>
   );
 }

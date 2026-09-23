@@ -2,16 +2,21 @@ import {afterEach, beforeEach, describe, expect, test} from "bun:test";
 
 import {assertSameOrigin, isAllowedAdminIdentity, requireAdmin, type Session, type SessionReader} from "@/lib/authz";
 
+const mutableEnv = process.env as unknown as Record<string, string | undefined>;
 const readerFor = (session: Session | null): SessionReader => ({
   api: {getSession: async () => session},
 });
 
 const originalAdminEmail = process.env.ADMIN_EMAIL;
 const originalAppUrl = process.env.APP_URL;
+const originalNodeEnv = mutableEnv.NODE_ENV;
+const originalLocalAuthBypass = process.env.LOCAL_AUTH_BYPASS;
 
 beforeEach(() => {
   process.env.ADMIN_EMAIL = "admin@example.com";
   process.env.APP_URL = "http://localhost:3000";
+  mutableEnv.NODE_ENV = "test";
+  delete process.env.LOCAL_AUTH_BYPASS;
 });
 
 afterEach(() => {
@@ -20,10 +25,48 @@ afterEach(() => {
 
   if (originalAppUrl === undefined) delete process.env.APP_URL;
   else process.env.APP_URL = originalAppUrl;
+
+  if (originalNodeEnv === undefined) delete mutableEnv.NODE_ENV;
+  else mutableEnv.NODE_ENV = originalNodeEnv;
+
+  if (originalLocalAuthBypass === undefined) delete process.env.LOCAL_AUTH_BYPASS;
+  else process.env.LOCAL_AUTH_BYPASS = originalLocalAuthBypass;
 });
 
 describe("requireAdmin", () => {
   test("rejects a missing session", async () => {
+    await expect(requireAdmin(new Headers(), readerFor(null))).rejects.toMatchObject({
+      status: 401,
+      code: "UNAUTHENTICATED",
+    });
+  });
+
+  test("allows the localhost development bypass without a session", async () => {
+    mutableEnv.NODE_ENV = "development";
+    process.env.LOCAL_AUTH_BYPASS = "true";
+
+    await expect(requireAdmin(new Headers(), readerFor(null))).resolves.toEqual({
+      userId: "local-development",
+      email: "admin@example.com",
+      name: "Local development",
+    });
+  });
+
+  test("does not bypass authentication on a remote development URL", async () => {
+    mutableEnv.NODE_ENV = "development";
+    process.env.LOCAL_AUTH_BYPASS = "true";
+    process.env.APP_URL = "https://preview.example.com";
+
+    await expect(requireAdmin(new Headers(), readerFor(null))).rejects.toMatchObject({
+      status: 401,
+      code: "UNAUTHENTICATED",
+    });
+  });
+
+  test("does not bypass authentication in production", async () => {
+    mutableEnv.NODE_ENV = "production";
+    process.env.LOCAL_AUTH_BYPASS = "true";
+
     await expect(requireAdmin(new Headers(), readerFor(null))).rejects.toMatchObject({
       status: 401,
       code: "UNAUTHENTICATED",

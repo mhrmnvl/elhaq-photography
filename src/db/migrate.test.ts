@@ -3,8 +3,8 @@ import {readFile} from "node:fs/promises";
 
 import {assertRequiredMigrations} from "@/db/migrate";
 
-test("rejects migration setup when the generated Better Auth migration is missing", async () => {
-  await expect(assertRequiredMigrations()).rejects.toThrow("0001_better_auth.sql");
+test("accepts the generated Better Auth migration", async () => {
+  await expect(assertRequiredMigrations()).resolves.toBeUndefined();
 });
 
 test("defines a nullable unique album creation key before live migration", async () => {

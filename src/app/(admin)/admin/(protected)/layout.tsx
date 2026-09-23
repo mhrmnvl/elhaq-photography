@@ -3,6 +3,8 @@ import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 
 import {AdminNav} from "@/components/admin/admin-nav";
+import {Separator} from "@/components/ui/separator";
+import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar";
 import {requireAdmin} from "@/lib/authz";
 import {HttpError} from "@/lib/errors";
 
@@ -17,9 +19,16 @@ export default async function ProtectedAdminLayout({children}: {children: React.
     throw error;
   }
   return (
-    <div className="min-h-screen">
+    <SidebarProvider>
       <AdminNav name={actor.name} />
-      <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
-    </div>
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-[var(--line)] px-4">
+          <SidebarTrigger />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <span className="font-serif text-xl">Elhaq Photography</span>
+        </header>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 md:px-6 md:py-10">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

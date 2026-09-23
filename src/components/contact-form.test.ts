@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 
-import {mapContactResponse} from "@/components/contact-form";
+import {mapContactResponse, validateContactValues} from "@/components/contact-form";
 
 const messages = {
   saved: "Your message has been saved. I will reply through the contact details you shared.",
@@ -11,6 +11,27 @@ const messages = {
   newEnquiry: "Start a new enquiry",
   retry: "Try again",
 };
+
+const submissionKey = "00000000-0000-4000-8000-000000000001";
+
+const validValues = {
+  name: "Ari",
+  email: "ari@example.com",
+  whatsapp: "",
+  eventType: "wedding" as const,
+  eventDate: "2028-02-29",
+  eventLocation: "Bandung",
+  message: "Please share availability.",
+};
+
+test("validates contact values with the shared Zod schema before submit", () => {
+  expect(validateContactValues(validValues, submissionKey)).toMatchObject({ok: true});
+  const invalid = validateContactValues({...validValues, name: "", email: "", whatsapp: ""}, submissionKey);
+  expect(invalid).toMatchObject({ok: false});
+  if (invalid.ok) throw new Error("expected contact validation to fail");
+  expect(invalid.fieldErrors).toHaveProperty("name");
+  expect(invalid.fieldErrors).toHaveProperty("email");
+});
 
 test("maps validation field errors to localized field messages", () => {
   expect(mapContactResponse(400, {

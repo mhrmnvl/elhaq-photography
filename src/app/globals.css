@@ -11,11 +11,21 @@
   --card-foreground: var(--charcoal);
   --primary: var(--charcoal);
   --primary-foreground: var(--ivory);
+  --accent: var(--muted);
+  --accent-foreground: var(--charcoal);
   --muted: color-mix(in srgb, var(--ivory) 80%, var(--line));
   --muted-foreground: var(--charcoal);
   --border: var(--line);
   --ring: var(--focus);
   --radius: 0.25rem;
+  --sidebar: var(--ivory);
+  --sidebar-foreground: var(--charcoal);
+  --sidebar-primary: var(--charcoal);
+  --sidebar-primary-foreground: var(--ivory);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--charcoal);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--focus);
 }
 
 @theme inline {
@@ -25,6 +35,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
@@ -35,6 +47,14 @@
   --color-focus: var(--focus);
   --font-serif: Georgia, "Times New Roman", serif;
   --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
 }
 
 * { box-sizing: border-box; }

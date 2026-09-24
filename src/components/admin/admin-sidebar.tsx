@@ -64,7 +64,7 @@ export function AdminSidebar({name, ...props}: React.ComponentProps<typeof Sideb
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader className="group-data-[collapsible=icon]:hidden">
-        <Link className="flex min-h-11 items-center px-2 font-serif text-base" href="/admin">Elhaq Photography</Link>
+        <Link className="flex min-h-11 items-center px-2 font-serif text-base" href="/admin" onClick={() => setOpenMobile(false)}>Elhaq Photography</Link>
       </SidebarHeader>
       <SidebarContent>
         <nav id="admin-navigation" aria-label="Admin navigation">
@@ -77,7 +77,7 @@ export function AdminSidebar({name, ...props}: React.ComponentProps<typeof Sideb
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
-                      <Link href={item.href} aria-current={active ? "page" : undefined}>
+                      <Link href={item.href} aria-current={active ? "page" : undefined} onClick={() => {if (isMobile) setOpenMobile(false);}}>
                         <Icon aria-hidden="true" />
                         <span>{item.label}</span>
                       </Link>

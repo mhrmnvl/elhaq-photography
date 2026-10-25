@@ -5,6 +5,7 @@ export type AlbumSaveMetadata = {
   category: AlbumCategory;
   title: BilingualText;
   story: BilingualText;
+  location: BilingualText;
   coverMediaId: string | null;
   sortOrder: number;
 };
@@ -58,6 +59,7 @@ function metadataInput(album: AdminAlbum): AlbumSaveMetadata {
     category: album.category,
     title: album.title,
     story: album.story,
+    location: album.location,
     coverMediaId: album.coverMediaId,
     sortOrder: album.sortOrder,
   };
@@ -75,6 +77,8 @@ function metadataFieldsMatch(album: AdminAlbum, metadata: AlbumSaveMetadata): bo
     && album.title.id === metadata.title.id.trim()
     && album.story.en === metadata.story.en.trim()
     && album.story.id === metadata.story.id.trim()
+    && album.location.en === metadata.location.en.trim()
+    && album.location.id === metadata.location.id.trim()
     && album.sortOrder === metadata.sortOrder;
 }
 

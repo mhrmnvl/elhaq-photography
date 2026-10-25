@@ -12,5 +12,5 @@ export default async function AlbumPage({params}: {params: Promise<{id: string}>
   const actor = await requireAdmin(await headers());
   const album = await getAdminAlbum(actor, (await params).id);
   if (!album) notFound();
-  return <AlbumEditor initialAlbum={album} />;
+  return <AlbumEditor key={album.id} initialAlbum={album} />;
 }

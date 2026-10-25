@@ -49,6 +49,7 @@ export type AdminAlbum = {
   category: AlbumCategory;
   title: BilingualText;
   story: BilingualText;
+  location: BilingualText;
   status: AlbumStatus;
   coverMediaId: string | null;
   sortOrder: number;
@@ -82,17 +83,33 @@ export type AdminContactMessage = AdminContactMessageSummary & {
   message: string;
 };
 
+export type AdminSearchResults = {
+  albums: readonly {id: string; slug: string; title: string}[];
+  messages: readonly {id: string; name: string; email: string | null; eventType: AlbumCategory}[];
+};
+
 export type PublicAlbumSummary = {
   id: string;
   slug: string;
   category: AlbumCategory;
   title: BilingualText;
+  location: BilingualText;
   cover: PublicMediaAsset | null;
 };
 
 export type PublicAlbum = PublicAlbumSummary & {
   story: BilingualText;
   photos: readonly AlbumPhoto[];
+};
+
+/** Satu foto milik satu album, dipakai untuk dinding foto di beranda. */
+export type PublicAlbumPhoto = {
+  albumId: string;
+  albumSlug: string;
+  category: AlbumCategory;
+  title: BilingualText;
+  location: BilingualText;
+  media: PublicMediaAsset;
 };
 
 export type SiteSettingsDraft = {

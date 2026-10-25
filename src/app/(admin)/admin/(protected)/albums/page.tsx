@@ -1,9 +1,7 @@
 import type * as React from "react";
 import {headers} from "next/headers";
-import Link from "next/link";
-
+import {AdminAlbumList} from "@/components/admin/admin-album-list";
 import {AlbumEditor} from "@/components/admin/album-editor";
-import {EmptyState} from "@/components/data-state";
 import {requireAdmin} from "@/lib/authz";
 import {listAdminAlbums} from "@/server/admin-albums";
 
@@ -15,36 +13,8 @@ export default async function AlbumsPage({searchParams}: {searchParams: Promise<
   const isCreating = (await searchParams).new === "1";
 
   if (isCreating) {
-    return (
-      <section className="space-y-6">
-        <Link className="inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]" href="/admin/albums">Back to albums</Link>
-        <AlbumEditor initialAlbum={null} />
-      </section>
-    );
+    return <AlbumEditor key="new" initialAlbum={null} />;
   }
 
-  return (
-    <section className="space-y-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm">Public portfolio</p>
-          <h1 className="mt-2 font-serif text-5xl">Albums</h1>
-        </div>
-        <Link className="inline-flex min-h-11 items-center border border-[var(--charcoal)] px-4 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]" href="/admin/albums?new=1">Create album</Link>
-      </header>
-      {albums.length === 0 ? <EmptyState title="No albums yet" description="Create a draft album, add its photos, and publish it when both languages are ready." action={{href: "/admin/albums?new=1", label: "Create an album"}} /> : (
-        <ul className="grid gap-4 md:grid-cols-2">
-          {albums.map((album) => (
-            <li key={album.id} className="border border-[var(--line)] p-5">
-              <Link className="block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--focus)]" href={`/admin/albums/${album.id}`}>
-                <span className="text-sm">{album.status === "published" ? "Published" : "Draft"}, {album.category}</span>
-                <h2 className="mt-2 font-serif text-3xl">{album.title.en}</h2>
-                <p className="mt-2 text-sm">{album.photos.length} photo{album.photos.length === 1 ? "" : "s"}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
+  return <AdminAlbumList albums={albums} />;
 }

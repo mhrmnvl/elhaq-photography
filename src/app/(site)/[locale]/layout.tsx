@@ -3,6 +3,7 @@ import {NextIntlClientProvider} from "next-intl";
 import {getLocale, getMessages} from "next-intl/server";
 import {notFound} from "next/navigation";
 
+import {dmSans, fraunces} from "@/app/fonts";
 import {routing} from "@/i18n/routing";
 import "@/app/globals.css";
 
@@ -21,7 +22,7 @@ export default async function SiteLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={activeLocale}>
+      <html lang={activeLocale} className={`${dmSans.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <body>
         <NextIntlClientProvider locale={activeLocale} messages={messages}>
           {children}

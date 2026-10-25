@@ -47,7 +47,7 @@ export default async function PortfolioPage({params}: PageProps): Promise<React.
 
   return (
     <main>
-      <SiteHeader locale={locale} brandName={brandName} logo={logo} />
+      <SiteHeader locale={locale} brandName={brandName} logo={logo} instagramUrl={settings?.instagramUrl ?? null} />
       <section className="px-6 py-16 sm:py-20 md:px-12 lg:py-28">
         <div className="mx-auto max-w-7xl space-y-12">
           <h1>{nav("portfolio")}</h1>

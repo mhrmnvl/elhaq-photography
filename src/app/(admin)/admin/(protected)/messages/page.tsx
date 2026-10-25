@@ -11,11 +11,9 @@ export default async function MessagesPage(): Promise<React.ReactElement> {
   const actor = await requireAdmin(await headers());
   const messages = await listContactMessages(actor);
   return (
-    <section className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-sm">Public contact form</p>
-        <h1 className="font-serif text-5xl">Messages</h1>
-        <p className="max-w-2xl">Read saved enquiries and reply through the contact channel they provided.</p>
+    <section className="space-y-6 pb-5">
+      <header>
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--charcoal)] m-0">Messages</h1>
       </header>
       <MessageList items={messages} />
     </section>

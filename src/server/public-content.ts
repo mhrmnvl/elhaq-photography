@@ -4,6 +4,7 @@ import type {
   AlbumPhoto,
   BilingualText,
   PublicAlbum,
+  PublicAlbumPhoto,
   PublicAlbumSummary,
   PublicMediaAsset,
   PublicSiteSettings,
@@ -15,6 +16,8 @@ type AlbumSummaryRow = {
   category: AlbumCategory;
   title_en: string;
   title_id: string;
+  location_en: string;
+  location_id: string;
   cover_id: string | null;
   cover_cloud_name: string | null;
   cover_public_id: string | null;
@@ -109,6 +112,7 @@ export function mapPublicAlbumSummary(row: AlbumSummaryRow): PublicAlbumSummary 
       slug: row.slug,
       category: row.category,
       title: {en: row.title_en, id: row.title_id},
+      location: {en: row.location_en, id: row.location_id},
       cover: null,
     };
   }
@@ -132,12 +136,13 @@ export function mapPublicAlbumSummary(row: AlbumSummaryRow): PublicAlbumSummary 
     slug: row.slug,
     category: row.category,
     title: {en: row.title_en, id: row.title_id},
+    location: {en: row.location_en, id: row.location_id},
     cover,
   };
 }
 
 const albumSummarySql = `
-  SELECT a.id, a.slug, a.category, a.title_en, a.title_id,
+  SELECT a.id, a.slug, a.category, a.title_en, a.title_id, a.location_en, a.location_id,
          cover.id AS cover_id, cover.cloud_name AS cover_cloud_name,
          cover.public_id AS cover_public_id, cover.secure_url AS cover_secure_url,
          cover.width AS cover_width, cover.height AS cover_height,
@@ -155,6 +160,65 @@ export async function listPublishedAlbums(category?: AlbumCategory, executor: Sq
     category ? [category] : [],
   );
   return result.rows.map(mapPublicAlbumSummary);
+}
+
+type AlbumPhotoWallRow = {
+  album_id: string;
+  album_slug: string;
+  category: AlbumCategory;
+  title_en: string;
+  title_id: string;
+  location_en: string;
+  location_id: string;
+  position: number;
+  media_id: string;
+  cloud_name: string;
+  public_id: string;
+  secure_url: string;
+  width: number;
+  height: number;
+  alt_en: string;
+  alt_id: string;
+};
+
+export function mapAlbumPhotoWallRow(row: AlbumPhotoWallRow): PublicAlbumPhoto {
+  return {
+    albumId: row.album_id,
+    albumSlug: row.album_slug,
+    category: row.category,
+    title: {en: row.title_en, id: row.title_id},
+    location: {en: row.location_en, id: row.location_id},
+    media: {
+      id: row.media_id,
+      cloudName: row.cloud_name,
+      publicId: row.public_id,
+      secureUrl: row.secure_url,
+      width: row.width,
+      height: row.height,
+      alt: {en: row.alt_en, id: row.alt_id},
+    },
+  };
+}
+
+/**
+ * Semua foto dari semua album published, untuk dinding foto di beranda.
+ *
+ * ponytail: satu query mengirim seluruh foto. Cukup untuk puluhan foto seperti sekarang;
+ * kalau album bertambah sampai ratusan, ganti dengan endpoint paging per batch.
+ */
+export async function listPublishedPhotos(executor: SqlExecutor = getDb()): Promise<readonly PublicAlbumPhoto[]> {
+  const result = await executor.query<AlbumPhotoWallRow>(`
+    SELECT a.id AS album_id, a.slug AS album_slug, a.category,
+           a.title_en, a.title_id, a.location_en, a.location_id,
+           ap.position, coalesce(ap.alt_en, '') AS alt_en, coalesce(ap.alt_id, '') AS alt_id,
+           m.id AS media_id, m.cloud_name, m.public_id, m.secure_url, m.width, m.height
+      FROM albums a
+      JOIN album_photos ap ON ap.album_id = a.id
+      JOIN media_assets m ON m.id = ap.media_id
+     WHERE a.status = 'published'
+     ORDER BY a.sort_order, a.created_at, a.id, ap.position
+  `);
+  return result.rows.map(mapAlbumPhotoWallRow);
 }
 
 export function mapPublishedAlbum(album: PublishedAlbumRow, photos: readonly AlbumPhotoRow[]): PublicAlbum {
@@ -183,7 +247,7 @@ export async function getPublishedAlbumBySlug(slug: string, executor?: SqlExecut
   if (!executor) return withRepeatableRead((client) => getPublishedAlbumBySlug(slug, client));
 
   const album = await executor.query<PublishedAlbumRow>(`
-    SELECT a.id, a.slug, a.category, a.title_en, a.title_id, a.story_en, a.story_id,
+    SELECT a.id, a.slug, a.category, a.title_en, a.title_id, a.story_en, a.story_id, a.location_en, a.location_id,
            cover.id AS cover_id, cover.cloud_name AS cover_cloud_name, cover.public_id AS cover_public_id,
            cover.secure_url AS cover_secure_url, cover.width AS cover_width, cover.height AS cover_height,
            coalesce(cover_photo.alt_en, '') AS cover_alt_en, coalesce(cover_photo.alt_id, '') AS cover_alt_id
@@ -286,7 +350,7 @@ export async function getPublicSiteSettings(executor: SqlExecutor = getDb()): Pr
 
 export async function getFeaturedPublishedAlbums(executor: SqlExecutor = getDb()): Promise<readonly PublicAlbumSummary[]> {
   const result = await executor.query<AlbumSummaryRow>(`
-    SELECT a.id, a.slug, a.category, a.title_en, a.title_id,
+    SELECT a.id, a.slug, a.category, a.title_en, a.title_id, a.location_en, a.location_id,
            cover.id AS cover_id, cover.cloud_name AS cover_cloud_name,
            cover.public_id AS cover_public_id, cover.secure_url AS cover_secure_url,
            cover.width AS cover_width, cover.height AS cover_height,

@@ -24,15 +24,15 @@ export function MessageList({items}: {items: readonly AdminContactMessageSummary
   return (
     <ul className="grid min-w-0 gap-4">
       {items.map((item) => (
-        <li key={item.id} className="min-w-0 border border-[var(--line)] p-5">
+        <li key={item.id} className="min-w-0 rounded-sm border border-[var(--line)]/25 bg-[var(--ivory)] p-5 transition-colors hover:border-[var(--line)]/50">
           <Link className="block min-w-0 space-y-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--focus)]" href={`/admin/messages/${item.id}`}>
             <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-3">
-              <h2 className="min-w-0 break-words font-serif text-2xl">{item.name}</h2>
-              <time className="min-w-0 break-words text-sm" dateTime={item.createdAt}>{item.createdAt}</time>
+              <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight text-[var(--charcoal)]">{item.name}</h2>
+              <time className="min-w-0 break-words text-sm text-[var(--charcoal)]/70" dateTime={item.createdAt}>{item.createdAt}</time>
             </div>
-            <p className="min-w-0 break-words">{eventLabel(item.eventType)}</p>
-            <p className="min-w-0 break-words text-sm">{[item.email, item.whatsapp].filter((channel): channel is string => channel !== null).join(" · ") || "No reply channel"}</p>
-            <p className="min-w-0 break-words text-sm">{statusLabel(item.notificationStatus)}</p>
+            <p className="min-w-0 break-words text-sm font-medium text-[var(--charcoal)]">{eventLabel(item.eventType)}</p>
+            <p className="min-w-0 break-words text-sm text-[var(--charcoal)]/80">{[item.email, item.whatsapp].filter((channel): channel is string => channel !== null).join(" · ") || "No reply channel"}</p>
+            <p className="min-w-0 break-words text-xs text-[var(--charcoal)]/70">{statusLabel(item.notificationStatus)}</p>
           </Link>
         </li>
       ))}

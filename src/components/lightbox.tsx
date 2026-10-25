@@ -33,10 +33,11 @@ export function LightboxGallery({photos, locale}: Props): React.ReactElement {
     <Dialog open={open} onOpenChange={setOpen}>
       <div className="grid gap-6 md:grid-cols-2">
         {photos.map((photo, photoIndex) => (
-          <button
+          <Button
             key={photo.media.id}
             type="button"
-            className="block min-h-11 min-w-11 w-full text-left"
+            variant="ghost"
+            className="block min-h-11 min-w-11 w-full h-auto p-0 text-left hover:bg-transparent"
             onClick={(event) => {
               triggerRef.current = event.currentTarget;
               setIndex(photoIndex);
@@ -45,7 +46,7 @@ export function LightboxGallery({photos, locale}: Props): React.ReactElement {
             aria-label={`${t("actions.openPhoto")} ${photo.media.alt[locale]}`}
           >
             <PublicPhoto asset={photo.media} locale={locale} />
-          </button>
+          </Button>
         ))}
       </div>
       {activePhoto ? (
@@ -89,9 +90,9 @@ export function LightboxGallery({photos, locale}: Props): React.ReactElement {
             <PublicPhoto asset={activePhoto.media} locale={locale} large />
           </div>
           <div className="flex flex-wrap justify-between gap-2">
-            <Button type="button" className="min-h-11 min-w-11" disabled={index === 0} onClick={() => setIndex(adjacentPhotoIndex(index, -1, photos.length))}>{t("actions.previous")}</Button>
-            <Button type="button" className="min-h-11 min-w-11" onClick={close}>{t("actions.close")}</Button>
-            <Button type="button" className="min-h-11 min-w-11" disabled={index === photos.length - 1} onClick={() => setIndex(adjacentPhotoIndex(index, 1, photos.length))}>{t("actions.next")}</Button>
+            <Button type="button" disabled={index === 0} onClick={() => setIndex(adjacentPhotoIndex(index, -1, photos.length))}>{t("actions.previous")}</Button>
+            <Button type="button" variant="outline" onClick={close}>{t("actions.close")}</Button>
+            <Button type="button" disabled={index === photos.length - 1} onClick={() => setIndex(adjacentPhotoIndex(index, 1, photos.length))}>{t("actions.next")}</Button>
           </div>
         </DialogContent>
       ) : null}

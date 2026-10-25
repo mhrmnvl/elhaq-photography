@@ -13,6 +13,7 @@ export type AlbumInput = {
   category: AlbumCategory;
   title: BilingualText;
   story: BilingualText;
+  location?: BilingualText;
   coverMediaId: string | null;
   sortOrder: number;
 };
@@ -51,6 +52,8 @@ type AdminAlbumRow = {
   title_id: string;
   story_en: string;
   story_id: string;
+  location_en: string;
+  location_id: string;
   status: "draft" | "published";
   cover_media_id: string | null;
   sort_order: number;
@@ -70,7 +73,7 @@ type AdminPhotoRow = {
   alt_id: string;
 };
 
-const albumColumns = "id, slug, category, title_en, title_id, story_en, story_id, status, cover_media_id, sort_order, creation_key, updated_at::text AS updated_at";
+const albumColumns = "id, slug, category, title_en, title_id, story_en, story_id, location_en, location_id, status, cover_media_id, sort_order, creation_key, updated_at::text AS updated_at";
 
 function dependencies(overrides: AdminAlbumDependencies): ConfiguredDependencies {
   return {
@@ -94,6 +97,8 @@ const albumSchema = z.object({
     id: z.string().trim().min(1).max(160),
   }).strict(),
   story: bilingual,
+  // Opsional supaya payload lama tetap sah; caption hanya menampilkannya kalau diisi.
+  location: z.object({en: z.string().trim().max(160), id: z.string().trim().max(160)}).strict().optional(),
   coverMediaId: z.string().uuid().nullable(),
   sortOrder: z.number().int().min(0).max(10000),
 }).strict();
@@ -174,6 +179,8 @@ function createInputMatches(row: AdminAlbumRow, input: AlbumInput): boolean {
     && row.title_id === input.title.id
     && row.story_en === input.story.en
     && row.story_id === input.story.id
+    && row.location_en === (input.location?.en ?? "")
+    && row.location_id === (input.location?.id ?? "")
     && row.cover_media_id === input.coverMediaId
     && row.sort_order === input.sortOrder;
 }
@@ -190,6 +197,7 @@ function mapAdminAlbum(row: AdminAlbumRow, photos: readonly AdminPhotoRow[]): Ad
     category: row.category,
     title: {en: row.title_en, id: row.title_id},
     story: {en: row.story_en, id: row.story_id},
+    location: {en: row.location_en, id: row.location_id},
     status: row.status,
     coverMediaId: row.cover_media_id,
     sortOrder: row.sort_order,
@@ -273,8 +281,8 @@ export async function createAlbum(actor: AdminSession, input: AlbumInput, overri
     const existing = await tx.query<AdminAlbumRow>(`SELECT ${albumColumns} FROM albums WHERE slug = $1 FOR UPDATE`, [input.slug]);
     if (existing.rows[0]) throw new DomainError(409, "ALBUM_SLUG_EXISTS", "An album with this slug already exists");
     const result = await tx.query<AdminAlbumRow>(
-      `INSERT INTO albums (creation_key, slug, category, title_en, title_id, story_en, story_id, cover_media_id, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT DO NOTHING RETURNING ${albumColumns}`,
-      [configured.idempotencyKey ?? null, input.slug, input.category, input.title.en, input.title.id, input.story.en, input.story.id, input.coverMediaId, input.sortOrder],
+      `INSERT INTO albums (creation_key, slug, category, title_en, title_id, story_en, story_id, location_en, location_id, cover_media_id, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT DO NOTHING RETURNING ${albumColumns}`,
+      [configured.idempotencyKey ?? null, input.slug, input.category, input.title.en, input.title.id, input.story.en, input.story.id, input.location?.en ?? "", input.location?.id ?? "", input.coverMediaId, input.sortOrder],
     );
     const row = result.rows[0];
     if (!row) {
@@ -306,8 +314,8 @@ export async function updateAlbum(actor: AdminSession, id: string, input: AlbumI
     await lockMediaForAttach(tx, [album.coverMediaId, input.coverMediaId].filter((mediaId): mediaId is string => mediaId !== null));
     assertCoverBelongsToPhotos(input.coverMediaId, album.photos);
     await tx.query(
-      "UPDATE albums SET slug = $1, category = $2, title_en = $3, title_id = $4, story_en = $5, story_id = $6, cover_media_id = $7, sort_order = $8, updated_at = GREATEST(clock_timestamp(), updated_at + interval '1 microsecond') WHERE id = $9",
-      [input.slug, input.category, input.title.en, input.title.id, input.story.en, input.story.id, input.coverMediaId, input.sortOrder, id],
+      "UPDATE albums SET slug = $1, category = $2, title_en = $3, title_id = $4, story_en = $5, story_id = $6, location_en = $7, location_id = $8, cover_media_id = $9, sort_order = $10, updated_at = GREATEST(clock_timestamp(), updated_at + interval '1 microsecond') WHERE id = $11",
+      [input.slug, input.category, input.title.en, input.title.id, input.story.en, input.story.id, input.location?.en ?? "", input.location?.id ?? "", input.coverMediaId, input.sortOrder, id],
     );
     const next = await loadAdminAlbum(tx, id);
     assertCoverBelongsToPhotos(next.coverMediaId, next.photos);

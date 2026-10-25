@@ -1,7 +1,8 @@
 import {assertSameOrigin, requireAdmin} from "@/lib/authz";
 import {readJsonBody} from "@/lib/body";
 import {HttpError} from "@/lib/errors";
-import {getAdminSettings, parseSiteSettingsInput, saveSiteSettings} from "@/server/admin-settings";
+import type {SettingsScope} from "@/lib/settings-scopes";
+import {getAdminSettings, parseSettingsScopeInput, parseSiteSettingsInput, saveSettingsScope, saveSiteSettings} from "@/server/admin-settings";
 
 export const runtime = "nodejs";
 
@@ -24,8 +25,12 @@ export async function PATCH(request: Request): Promise<Response> {
   try {
     const actor = await requireAdmin(request.headers);
     assertSameOrigin(request);
-    const input = parseSiteSettingsInput(await readJsonBody(request, 128 * 1024));
-    return Response.json(await saveSiteSettings(actor, input));
+    const body = await readJsonBody(request, 128 * 1024);
+    if (body !== null && typeof body === "object" && "scope" in body) {
+      const {scope, values} = body as {scope: SettingsScope; values: unknown};
+      return Response.json(await saveSettingsScope(actor, scope, parseSettingsScopeInput(scope, values)));
+    }
+    return Response.json(await saveSiteSettings(actor, parseSiteSettingsInput(body)));
   } catch (error) {
     return errorResponse(error, "SETTINGS_SAVE_FAILED");
   }

@@ -17,8 +17,8 @@ async function readMigration(file: string): Promise<string> {
   return readFile(join(migrationsDir, basename(file)), "utf8");
 }
 
-export async function assertRequiredMigrations(): Promise<void> {
-  const available = new Set(await sortedSqlFiles());
+export async function assertRequiredMigrations(files?: readonly string[]): Promise<void> {
+  const available = new Set(files ?? await sortedSqlFiles());
   const missing = requiredMigrationFiles.filter((file) => !available.has(file));
   if (missing.length > 0) {
     throw new Error(`Required migration files missing: ${missing.join(", ")}`);

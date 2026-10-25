@@ -2,10 +2,13 @@ import {expect, test} from "bun:test";
 import type {PoolClient} from "pg";
 
 import type {SiteSettingsDraft} from "@/lib/domain";
+import {settingsScopeFields, settingsScopes, type SettingsScope, type SettingsScopePayload} from "@/lib/settings-scopes";
 import {getPublicSiteSettings} from "@/server/public-content";
 import {
   getAdminSettings,
+  parseSettingsScopeInput,
   parseSiteSettingsInput,
+  saveSettingsScope,
   saveSiteSettings,
 } from "@/server/admin-settings";
 
@@ -87,8 +90,15 @@ function clientFor({mediaIds = [logoId, heroId, aboutId], publishedIds = [featur
   const client = {
     async query<T extends Record<string, unknown>>(text: string, values: readonly unknown[] = []): Promise<{rows: T[]}> {
       queries.push({text, values});
-      if (text.includes("FROM media_assets")) return {rows: mediaIds.map((id) => ({id} as unknown as T))};
-      if (text.includes("FROM albums")) return {rows: publishedIds.map((id) => ({id} as unknown as T))};
+      if (text.includes("FROM media_assets")) {
+        const requested = new Set(values[0] as string[]);
+        return {rows: mediaIds.filter((id) => requested.has(id)).sort().map((id) => ({id} as unknown as T))};
+      }
+      if (text.includes("FROM albums")) {
+        const requested = new Set(values[0] as string[]);
+        return {rows: publishedIds.filter((id) => requested.has(id)).map((id) => ({id} as unknown as T))};
+      }
+      if (text.includes("RETURNING")) return {rows: [rowFromInput(input) as unknown as T]};
       return {rows: []};
     },
   } as unknown as PoolClient;
@@ -197,4 +207,120 @@ test("public settings resolves media through its explicit public joins without e
   expect(settings).not.toHaveProperty("logoMediaId");
   expect(settings).not.toHaveProperty("featuredAlbumIds");
   expect(queries[0]).not.toContain("private_client_links");
+});
+
+function scopeValues(scope: SettingsScope): SettingsScopePayload<SettingsScope> {
+  const values: Record<string, unknown> = {};
+  for (const field of settingsScopeFields[scope]) values[field] = (input as Record<string, unknown>)[field];
+  return values as SettingsScopePayload<SettingsScope>;
+}
+
+function scopeSaveSql(queries: readonly {text: string; values: readonly unknown[]}[]): {text: string; values: readonly unknown[]} {
+  const query = queries.find((candidate) => candidate.text.includes("ON CONFLICT (singleton) DO UPDATE"));
+  if (!query) throw new Error("SCOPE_UPSERT_MISSING");
+  return query;
+}
+
+test("parses one scope payload and rejects an unknown scope", () => {
+  const parsed = parseSettingsScopeInput("contact", {
+    location: {en: " Bandung Regency ", id: "Kabupaten Bandung"},
+    serviceArea: {en: "Bandung and surroundings", id: "Bandung dan sekitarnya"},
+    instagramUrl: "   ",
+    whatsappNumber: " +62 812-3456-789 ",
+  });
+
+  expect(parsed.location).toEqual({en: "Bandung Regency", id: "Kabupaten Bandung"});
+  expect(parsed.instagramUrl).toBeNull();
+  expect(parsed.whatsappNumber).toBe("+628123456789");
+  expect(() => parseSettingsScopeInput("nope" as SettingsScope, {})).toThrow("UNKNOWN_SETTINGS_SCOPE");
+  expect(() => parseSettingsScopeInput("brand", {...scopeValues("brand"), homeHeadline: input.homeHeadline})).toThrow("VALIDATION_FAILED");
+});
+
+test("a scope save updates only that scope's own columns", async () => {
+  const {client, queries} = clientFor();
+
+  await saveSettingsScope(actor, "brand", scopeValues("brand"), {
+    transaction: async (work) => work(client),
+    invalidate: () => undefined,
+  });
+
+  const upsert = scopeSaveSql(queries);
+  const setClause = upsert.text.split("DO UPDATE SET")[1].split("RETURNING")[0];
+  expect(setClause).toContain("brand_name = EXCLUDED.brand_name");
+  expect(setClause).toContain("logo_media_id = EXCLUDED.logo_media_id");
+  expect(setClause).not.toContain("home_headline_en");
+  expect(setClause).not.toContain("service_wedding_title_en");
+  expect(setClause).not.toContain("featured_album_ids");
+  expect(upsert.values).toContain("Elhaq Photography");
+  expect(upsert.values).not.toContain("Weddings");
+});
+
+test("a scope save locks only its own media", async () => {
+  const brand = clientFor();
+  await saveSettingsScope(actor, "brand", scopeValues("brand"), {
+    transaction: async (work) => work(brand.client),
+    invalidate: () => undefined,
+  });
+  const brandMediaQuery = brand.queries.find((query) => query.text.includes("FROM media_assets"));
+  expect(brandMediaQuery?.values).toEqual([[logoId]]);
+
+  const contact = clientFor();
+  await saveSettingsScope(actor, "contact", scopeValues("contact"), {
+    transaction: async (work) => work(contact.client),
+    invalidate: () => undefined,
+  });
+  expect(contact.queries.some((query) => query.text.includes("FROM media_assets"))).toBe(false);
+});
+
+test("only the featured scope verifies published albums", async () => {
+  const brand = clientFor({publishedIds: []});
+  await expect(saveSettingsScope(actor, "brand", scopeValues("brand"), {
+    transaction: async (work) => work(brand.client),
+    invalidate: () => undefined,
+  })).resolves.toBeDefined();
+  expect(brand.queries.some((query) => query.text.includes("FROM albums"))).toBe(false);
+
+  const featured = clientFor({publishedIds: []});
+  await expect(saveSettingsScope(actor, "featured", scopeValues("featured"), {
+    transaction: async (work) => work(featured.client),
+    invalidate: () => undefined,
+  })).rejects.toMatchObject({code: "FEATURED_ALBUM_NOT_PUBLISHED"});
+});
+
+test("a scope save returns the settings row read back from the database", async () => {
+  const {client, queries} = clientFor();
+
+  const saved = await saveSettingsScope(actor, "brand", {brandName: "New Brand", logoMediaId: null, logoAlt: {en: "", id: ""}}, {
+    transaction: async (work) => work(client),
+    invalidate: () => undefined,
+  });
+
+  expect(scopeSaveSql(queries).text).toContain("RETURNING");
+  expect(saved.brandName).toBe("Elhaq Photography");
+  expect(saved.homeHeadline).toEqual(input.homeHeadline);
+});
+
+test("the scope column map partitions every settings column", async () => {
+  const updated = new Set<string>();
+  let insertColumns: string[] = [];
+
+  for (const scope of settingsScopes) {
+    const {client, queries} = clientFor();
+    await saveSettingsScope(actor, scope, scopeValues(scope), {
+      transaction: async (work) => work(client),
+      invalidate: () => undefined,
+    });
+
+    const {text} = scopeSaveSql(queries);
+    const insertList = text.slice(text.indexOf("(") + 1, text.indexOf(") VALUES"));
+    insertColumns = insertList.split(",").map((column) => column.trim()).filter((column) => column !== "singleton");
+
+    for (const [, column] of text.split("DO UPDATE SET")[1].split("RETURNING")[0].matchAll(/([a-z_]+) = EXCLUDED\./g)) {
+      expect(updated.has(column)).toBe(false);
+      updated.add(column);
+    }
+  }
+
+  expect(insertColumns).toHaveLength(37);
+  expect([...updated].sort()).toEqual([...insertColumns].sort());
 });

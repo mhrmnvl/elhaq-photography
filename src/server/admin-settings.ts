@@ -6,66 +6,17 @@ import {getDb, withTransaction, type SqlExecutor} from "@/lib/db";
 import type {SiteSettingsDraft} from "@/lib/domain";
 import {DomainError, HttpError} from "@/lib/errors";
 import {invalidatePublicPaths} from "@/lib/public-revalidation";
+import {
+  emptySiteSettings,
+  settingsScopeSchemas,
+  siteSettingsShape,
+  withMediaAltRules,
+  type SettingsScope,
+  type SettingsScopePayload,
+} from "@/lib/settings-scopes";
 import {lockMediaForAttach} from "@/server/admin-media";
 
-const requiredBilingual = z.object({
-  en: z.string().trim().min(1).max(5000),
-  id: z.string().trim().min(1).max(5000),
-}).strict();
-
-const optionalAlt = z.object({
-  en: z.string().trim().max(200),
-  id: z.string().trim().max(200),
-}).strict();
-
-const serviceSchema = z.object({title: requiredBilingual, description: requiredBilingual}).strict();
-
-const nullableUrl = z.preprocess(
-  (value) => typeof value === "string" && value.trim() === "" ? null : value,
-  z.string().url().nullable().optional(),
-).transform((value) => value ?? null);
-
-const nullableWhatsapp = z.preprocess(
-  (value) => typeof value === "string" && value.trim() === "" ? null : value,
-  z.string().trim().max(32).regex(/^\+?[0-9][0-9 ()-]{5,31}$/).transform((value) => value.replace(/[ ()-]/g, "")).nullable().optional(),
-).transform((value) => value ?? null);
-
-const settingsSchema = z.object({
-  brandName: z.string().trim().min(1).max(160),
-  logoMediaId: z.string().uuid().nullable(),
-  logoAlt: optionalAlt,
-  heroMediaId: z.string().uuid().nullable(),
-  heroAlt: optionalAlt,
-  personalIntroduction: requiredBilingual,
-  aboutMediaId: z.string().uuid().nullable(),
-  aboutAlt: optionalAlt,
-  aboutStory: requiredBilingual,
-  homeHeadline: requiredBilingual,
-  homeDescription: requiredBilingual,
-  services: z.object({wedding: serviceSchema, events: serviceSchema, other: serviceSchema}).strict(),
-  location: requiredBilingual,
-  serviceArea: requiredBilingual,
-  instagramUrl: nullableUrl,
-  whatsappNumber: nullableWhatsapp,
-  featuredAlbumIds: z.array(z.string().uuid()).max(50),
-}).strict().superRefine((value, context) => {
-  for (const [mediaKey, altKey] of [["logoMediaId", "logoAlt"], ["heroMediaId", "heroAlt"], ["aboutMediaId", "aboutAlt"]] as const) {
-    const alt = value[altKey];
-    if (value[mediaKey] && (!alt.en || !alt.id)) {
-      context.addIssue({code: "custom", path: [altKey], message: "Both media alt texts are required"});
-    }
-  }
-  if (value.instagramUrl) {
-    const url = new URL(value.instagramUrl);
-    const host = url.hostname.toLowerCase();
-    if (host !== "instagram.com" && host !== "www.instagram.com") {
-      context.addIssue({code: "custom", path: ["instagramUrl"], message: "Instagram URL host is not allowed"});
-    }
-    if (url.protocol !== "https:") {
-      context.addIssue({code: "custom", path: ["instagramUrl"], message: "Instagram URL must use HTTPS"});
-    }
-  }
-});
+const settingsSchema = withMediaAltRules(z.object(siteSettingsShape).strict());
 
 export type AdminSettingsDependencies = {
   db?: SqlExecutor;
@@ -133,6 +84,14 @@ export function parseSiteSettingsInput(raw: unknown): SiteSettingsDraft {
   return result.data;
 }
 
+export function parseSettingsScopeInput<S extends SettingsScope>(scope: S, raw: unknown): SettingsScopePayload<S> {
+  const schema = settingsScopeSchemas[scope as SettingsScope];
+  if (!schema) throw new HttpError(422, "UNKNOWN_SETTINGS_SCOPE", "Unknown settings scope");
+  const result = schema.safeParse(raw);
+  if (!result.success) throw new HttpError(422, "VALIDATION_FAILED", "Site settings are invalid");
+  return result.data as SettingsScopePayload<S>;
+}
+
 function mapDraft(row: SiteSettingsRow): SiteSettingsDraft {
   return {
     brandName: row.brand_name,
@@ -168,14 +127,41 @@ function mapDraft(row: SiteSettingsRow): SiteSettingsDraft {
   };
 }
 
-const settingsColumns = `
-  brand_name, logo_media_id, logo_alt_en, logo_alt_id, hero_media_id, hero_alt_en, hero_alt_id,
-  personal_introduction_en, personal_introduction_id, about_media_id, about_alt_en, about_alt_id,
-  about_story_en, about_story_id, home_headline_en, home_headline_id, home_description_en, home_description_id,
-  service_wedding_title_en, service_wedding_title_id, service_wedding_description_en, service_wedding_description_id,
-  service_events_title_en, service_events_title_id, service_events_description_en, service_events_description_id,
-  service_other_title_en, service_other_title_id, service_other_description_en, service_other_description_id,
-  location_en, location_id, service_area_en, service_area_id, instagram_url, whatsapp_number, featured_album_ids`;
+const settingsColumnList = [
+  "brand_name", "logo_media_id", "logo_alt_en", "logo_alt_id", "hero_media_id", "hero_alt_en", "hero_alt_id",
+  "personal_introduction_en", "personal_introduction_id", "about_media_id", "about_alt_en", "about_alt_id",
+  "about_story_en", "about_story_id", "home_headline_en", "home_headline_id", "home_description_en", "home_description_id",
+  "service_wedding_title_en", "service_wedding_title_id", "service_wedding_description_en", "service_wedding_description_id",
+  "service_events_title_en", "service_events_title_id", "service_events_description_en", "service_events_description_id",
+  "service_other_title_en", "service_other_title_id", "service_other_description_en", "service_other_description_id",
+  "location_en", "location_id", "service_area_en", "service_area_id", "instagram_url", "whatsapp_number", "featured_album_ids",
+] as const;
+
+const settingsColumns = settingsColumnList.join(", ");
+
+const scopeUpdateColumns: Record<SettingsScope, readonly (typeof settingsColumnList)[number][]> = {
+  brand: ["brand_name", "logo_media_id", "logo_alt_en", "logo_alt_id"],
+  home: [
+    "hero_media_id", "hero_alt_en", "hero_alt_id", "personal_introduction_en", "personal_introduction_id",
+    "home_headline_en", "home_headline_id", "home_description_en", "home_description_id",
+  ],
+  about: ["about_media_id", "about_alt_en", "about_alt_id", "about_story_en", "about_story_id"],
+  services: [
+    "service_wedding_title_en", "service_wedding_title_id", "service_wedding_description_en", "service_wedding_description_id",
+    "service_events_title_en", "service_events_title_id", "service_events_description_en", "service_events_description_id",
+    "service_other_title_en", "service_other_title_id", "service_other_description_en", "service_other_description_id",
+  ],
+  contact: ["location_en", "location_id", "service_area_en", "service_area_id", "instagram_url", "whatsapp_number"],
+  featured: ["featured_album_ids"],
+};
+
+function scopeUpsertSql(scope: SettingsScope): string {
+  const placeholders = settingsColumnList.map((_, index) => `$${index + 1}`).join(", ");
+  const updated = scopeUpdateColumns[scope].map((column) => `${column} = EXCLUDED.${column}`).join(", ");
+  return `INSERT INTO site_settings (singleton, ${settingsColumns}) VALUES (true, ${placeholders})
+    ON CONFLICT (singleton) DO UPDATE SET ${updated}, updated_at = now()
+    RETURNING ${settingsColumns}`;
+}
 
 export async function getAdminSettings(actor: AdminSession, overrides: AdminSettingsDependencies = {}): Promise<SiteSettingsDraft | null> {
   void actor;
@@ -282,6 +268,29 @@ export async function saveSiteSettings(actor: AdminSession, input: SiteSettingsD
     await assertPublishedFeaturedAlbums(tx, input.featuredAlbumIds);
     await tx.query(upsertSettingsSql, valuesFor(input));
     return {...input, featuredAlbumIds: [...input.featuredAlbumIds]};
+  });
+  invalidateAfterCommit(configured);
+  return saved;
+}
+
+function scopeMediaIds(scope: SettingsScope, draft: SiteSettingsDraft): string[] {
+  if (scope === "brand") return draft.logoMediaId ? [draft.logoMediaId] : [];
+  if (scope === "home") return draft.heroMediaId ? [draft.heroMediaId] : [];
+  if (scope === "about") return draft.aboutMediaId ? [draft.aboutMediaId] : [];
+  return [];
+}
+
+export async function saveSettingsScope<S extends SettingsScope>(actor: AdminSession, scope: S, values: SettingsScopePayload<S>, overrides: AdminSettingsDependencies = {}): Promise<SiteSettingsDraft> {
+  void actor;
+  const configured = dependencies(overrides);
+  const draft = {...emptySiteSettings, ...values as Partial<SiteSettingsDraft>};
+  const saved = await configured.transaction(async (tx) => {
+    await lockMediaForAttach(tx, scopeMediaIds(scope, draft));
+    if (scope === "featured") await assertPublishedFeaturedAlbums(tx, draft.featuredAlbumIds);
+    const result = await tx.query<SiteSettingsRow>(scopeUpsertSql(scope), valuesFor(draft));
+    const row = result.rows[0];
+    if (!row) throw new Error("SETTINGS_SCOPE_WRITE_FAILED");
+    return mapDraft(row);
   });
   invalidateAfterCommit(configured);
   return saved;

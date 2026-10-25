@@ -10,6 +10,7 @@ const fixture = [
     status: "draft" as const,
     category: "wedding" as const,
     title: {en: "Draft", id: "Draf"},
+    location: {en: "", id: ""},
     cover: null,
   },
   {
@@ -18,6 +19,7 @@ const fixture = [
     status: "published" as const,
     category: "events" as const,
     title: {en: "Published", id: "Terbit"},
+    location: {en: "", id: ""},
     cover: null,
   },
 ] satisfies readonly (PublicAlbumSummary & {status: "draft" | "published"})[];
@@ -27,6 +29,7 @@ const missingStatus = {
   slug: "missing-status-fixture",
   category: "other" as const,
   title: {en: "Missing status", id: "Status hilang"},
+  location: {en: "", id: ""},
   cover: null,
 } as PublicAlbumSummary & {status: "draft" | "published"};
 

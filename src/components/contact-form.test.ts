@@ -1,6 +1,7 @@
 import {expect, test} from "bun:test";
 
 import {mapContactResponse} from "@/components/contact-form";
+import {dateFromInputValue, dateToInputValue} from "@/components/ui/date-picker";
 
 const messages = {
   saved: "Your message has been saved. I will reply through the contact details you shared.",
@@ -55,4 +56,15 @@ test("maps a saved response without claiming email delivery", () => {
 
   expect(mapped).toEqual({fieldErrors: {}, status: {kind: "saved", message: messages.saved}});
   expect(mapped.status.message.toLowerCase()).not.toContain("email sent");
+});
+
+test("round-trips date-only values without timezone shifts", () => {
+  const date = dateFromInputValue("2024-02-29");
+
+  expect(date).toBeInstanceOf(Date);
+  expect(dateToInputValue(date)).toBe("2024-02-29");
+});
+
+test("rejects invalid date-only values", () => {
+  expect(dateFromInputValue("2024-02-30")).toBeUndefined();
 });

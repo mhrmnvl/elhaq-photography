@@ -1,10 +1,21 @@
 {
   "nav": {"home": "Home", "portfolio": "Portfolio", "selectedStories": "Selected Stories", "about": "About", "contact": "Contact", "language": "Language", "primary": "Primary navigation"},
-  "actions": {"retry": "Try again", "backToPortfolio": "Back to Portfolio", "backToHome": "Back to Home", "save": "Save changes", "cancel": "Cancel", "close": "Close", "previous": "Previous photo", "next": "Next photo", "openPhoto": "Open photo", "openMenu": "Open menu", "closeMenu": "Close menu", "upload": "Upload photos", "remove": "Remove", "moveUp": "Move photo up", "moveDown": "Move photo down", "publish": "Publish", "unpublish": "Move to draft", "choosePhoto": "Choose photo"},
+  "actions": {"retry": "Try again", "backToPortfolio": "Back to Portfolio", "backToHome": "Back to Home", "save": "Save changes", "cancel": "Cancel", "close": "Close", "previous": "Previous photo", "next": "Next photo", "openPhoto": "Open photo", "openMenu": "Open menu", "closeMenu": "Close menu", "menu": "Menu", "upload": "Upload photos", "remove": "Remove", "moveUp": "Move photo up", "moveDown": "Move photo down", "publish": "Publish", "unpublish": "Move to draft", "choosePhoto": "Choose photo"},
   "state": {"loading": "Loading", "emptyTitle": "Nothing here yet", "emptyDescription": "This section is being prepared.", "notFoundTitle": "Page not found", "notFoundDescription": "The page you requested is not available.", "errorTitle": "Something went wrong", "errorDescription": "Try again or return to the portfolio.", "setupTitle": "This page is being prepared", "setupDescription": "I am preparing this section."},
   "portfolio": {"all": "All stories", "filter": "Filter stories", "emptyTitle": "No published stories yet", "emptyDescription": "Published stories will appear here when they are ready."},
-  "contact": {"saved": "Your message has been saved. I will reply through the contact details you shared.", "name": "Name", "email": "Email", "whatsapp": "WhatsApp", "eventType": "Event type", "eventDate": "Event date", "eventLocation": "Event location", "message": "Tell me about your plans", "submit": "Send enquiry", "submitting": "Saving message", "requiredChannel": "Add an email or WhatsApp number.", "validation": "Check the highlighted fields.", "conflict": "This form was submitted with different details. Review the fields and try again.", "newEnquiry": "Start a new enquiry", "rateLimited": "Please wait before sending another message."},
+  "contact": {"saved": "Your message has been saved. I will reply through the contact details you shared.", "name": "Name", "email": "Email", "whatsapp": "WhatsApp", "eventType": "Event type", "eventDate": "Event date", "clearDate": "Clear date", "eventLocation": "Event location", "message": "Tell me about your plans", "submit": "Send enquiry", "submitting": "Saving message", "requiredChannel": "Add an email or WhatsApp number.", "validation": "Check the highlighted fields.", "conflict": "This form was submitted with different details. Review the fields and try again.", "newEnquiry": "Start a new enquiry", "rateLimited": "Please wait before sending another message.", "tagline": "Let's capture your story", "intro": "Whether you are planning an intimate ceremony or a celebration across the world, share your vision with us.", "responseNote": "We typically respond within 24 to 48 hours.", "availabilityNote": "Dates are reserved on a first-come basis.", "directInquiry": "Prefer direct messaging?", "chatWhatsApp": "Chat on WhatsApp"},
   "category": {"wedding": "Wedding", "events": "Events", "other": "Other photography"},
   "a11y": {"photo": "Photo", "photoPlaceholder": "Photo placeholder", "gallery": "Gallery", "photoPosition": "Photo {current} of {total}", "selected": "Selected", "uploadStatus": "Upload status", "error": "Error"},
-  "admin": {"signIn": "Sign in with Google", "dashboard": "Dashboard", "albums": "Albums", "settings": "Website settings", "messages": "Messages", "privateLinks": "Private client links", "media": "Media library", "draft": "Draft", "published": "Published", "cleanupPending": "Remote cleanup pending"}
+  "admin": {"signIn": "Sign in with Google", "dashboard": "Dashboard", "albums": "Albums", "settings": "Website settings", "messages": "Messages", "privateLinks": "Private client links", "media": "Media library", "draft": "Draft", "published": "Published", "cleanupPending": "Remote cleanup pending"},
+  "footer": {"tagline": "Capturing authentic emotions and timeless stories.", "navigation": "Navigation", "social": "Connect", "rights": "All rights reserved.", "backToTop": "Back to top"},
+  "home": {
+    "heroTag": "Photography & Documentation",
+    "viewWork": "View portfolio",
+    "inquire": "Check Availability",
+    "servicesHeading": "Photography Services",
+    "readAbout": "Read full story",
+    "viewAllStories": "View all stories",
+    "locationLabel": "Based in",
+    "coverageLabel": "Coverage"
+  }
 }

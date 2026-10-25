@@ -1,31 +1,58 @@
 @import "tailwindcss";
+@import "./typeset.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@layer components {
+  .typeset-docs {
+    --typeset-font-body: var(--font-dm-sans);
+    --typeset-font-heading: var(--font-dm-sans);
+    --typeset-font-mono: var(--font-dm-sans);
+    --typeset-size: 14px;
+    --typeset-leading: 1.6;
+    --typeset-flow: 1em;
+  }
+}
 
 :root {
   --ivory: #F6F1E9;
   --charcoal: #272521;
   --line: #8F887E;
   --focus: #272521;
-  --background: var(--ivory);
-  --foreground: var(--charcoal);
-  --card: var(--ivory);
-  --card-foreground: var(--charcoal);
-  --primary: var(--charcoal);
-  --primary-foreground: var(--ivory);
-  --accent: var(--muted);
-  --accent-foreground: var(--charcoal);
-  --muted: color-mix(in srgb, var(--ivory) 80%, var(--line));
-  --muted-foreground: var(--charcoal);
-  --border: var(--line);
-  --ring: var(--focus);
-  --radius: 0.25rem;
-  --sidebar: var(--ivory);
-  --sidebar-foreground: var(--charcoal);
-  --sidebar-primary: var(--charcoal);
-  --sidebar-primary-foreground: var(--ivory);
-  --sidebar-accent: var(--muted);
-  --sidebar-accent-foreground: var(--charcoal);
-  --sidebar-border: var(--line);
-  --sidebar-ring: var(--focus);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.153 0.006 107.1);
+  --primary: oklch(0.228 0.013 107.4);
+  --primary-foreground: oklch(0.988 0.003 106.5);
+  --accent: oklch(0.966 0.005 106.5);
+  --accent-foreground: oklch(0.228 0.013 107.4);
+  --muted: oklch(0.966 0.005 106.5);
+  --muted-foreground: oklch(0.58 0.031 107.3);
+  --border: oklch(0.93 0.007 106.5);
+  --ring: oklch(0.737 0.021 106.9);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.988 0.003 106.5);
+  --sidebar-foreground: oklch(0.153 0.006 107.1);
+  --sidebar-primary: oklch(0.228 0.013 107.4);
+  --sidebar-primary-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-accent: oklch(0.966 0.005 106.5);
+  --sidebar-accent-foreground: oklch(0.228 0.013 107.4);
+  --sidebar-border: oklch(0.93 0.007 106.5);
+  --sidebar-ring: oklch(0.737 0.021 106.9);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.153 0.006 107.1);
+  --secondary: oklch(0.966 0.005 106.5);
+  --secondary-foreground: oklch(0.228 0.013 107.4);
+  --destructive: oklch(0.577 0.245 27.325);
+  --input: oklch(0.93 0.007 106.5);
+  --chart-1: oklch(0.88 0.011 106.6);
+  --chart-2: oklch(0.58 0.031 107.3);
+  --chart-3: oklch(0.466 0.025 107.3);
+  --chart-4: oklch(0.394 0.023 107.4);
+  --chart-5: oklch(0.286 0.016 107.4);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.153 0.006 107.1);
 }
 
 @theme inline {
@@ -45,8 +72,8 @@
   --color-charcoal: var(--charcoal);
   --color-line: var(--line);
   --color-focus: var(--focus);
-  --font-serif: Georgia, "Times New Roman", serif;
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-dm-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -55,14 +82,491 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --font-heading: var(--font-sans);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 * { box-sizing: border-box; }
 html { background: var(--ivory); color: var(--charcoal); }
 body { margin: 0; min-width: 320px; background: var(--ivory); color: var(--charcoal); font-family: var(--font-sans); }
-h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 400; }
-h1 { font-size: clamp(2.25rem, 6vw, 4.5rem); line-height: 1.05; }
-:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; box-shadow: 0 0 0 4px var(--ivory); }
-button, a, input, textarea, select { min-height: 44px; }
-button[type="submit"], [data-cta] { min-width: 44px; }
+
+/* Beranda: scrollbar disembunyikan supaya dinding foto terasa mengalir tanpa akhir.
+   Gulir roda, trackpad, sentuh, dan keyboard tetap bekerja. */
+html:has(.hide-scrollbar) { scrollbar-width: none; }
+html:has(.hide-scrollbar)::-webkit-scrollbar { width: 0; height: 0; }
+
+/* Layar pembuka beranda. Teks sudah sebesar dan selebar keadaan akhir sejak awal,
+   lalu tiap huruf naik keluar ke atas dan digantikan huruf yang sama masuk dari bawah,
+   mengalir dari huruf pertama sampai terakhir dan berputar lagi. Setelah beberapa
+   putaran semua huruf naik bersama, lalu tirai tersingkap ke atas.
+   Semua gerakan dikunci di CSS supaya urutannya tidak bergantung pada render React;
+   React hanya mengganti data-phase. */
+.site-intro {
+  transition: translate var(--intro-curtain-ms) cubic-bezier(0.76, 0, 0.24, 1);
+}
+.site-intro[data-phase="curtain"] {
+  translate: 0 -100%;
+}
+
+.site-intro__group {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding-inline: clamp(0.5rem, 1.875vw, 1.5rem);
+  font-size: 7vw;
+}
+
+/* overflow tersembunyi membuat huruf seolah keluar dari tepi baris teks,
+   baik saat naik ke atas maupun saat masuk dari bawah. */
+.site-intro__text {
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  gap: 0.3em;
+  font-size: 1em;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.site-intro__word { display: inline-flex; }
+.site-intro__slot { position: relative; display: inline-block; overflow: hidden; }
+.site-intro__letter { display: inline-block; }
+/* Salinan kedua menimpa yang pertama, jadi saat yang pertama naik keluar,
+   huruf yang sama sudah masuk dari bawah menggantikannya. */
+.site-intro__letter--in { position: absolute; left: 0; top: 0; translate: 0 100%; }
+
+/* Satu giliran huruf: naik keluar lewat batas atas baris sementara huruf yang sama
+   sudah masuk dari bawah, jadi tidak pernah ada momen kosong. Keduanya berhenti di tepi
+   baris teks, bukan keluar layar. Huruf berikutnya baru mulai di giliran berikutnya. */
+.site-intro[data-phase="waving"] .site-intro__letter--out {
+  animation: intro-letter-wave-out var(--intro-letter-step) ease-in-out var(--intro-letter-delay, 0ms) var(--intro-cycles) both;
+}
+.site-intro[data-phase="waving"] .site-intro__letter--in {
+  animation: intro-letter-wave-in var(--intro-letter-step) ease-in-out var(--intro-letter-delay, 0ms) var(--intro-cycles) both;
+}
+.site-intro[data-phase="curtain"] .site-intro__letter--out { translate: 0 -100%; }
+.site-intro[data-phase="curtain"] .site-intro__letter--in { translate: 0 0; }
+
+@keyframes intro-letter-wave-out {
+  0% { translate: 0 0; }
+  100% { translate: 0 -100%; }
+}
+@keyframes intro-letter-wave-in {
+  0% { translate: 0 100%; }
+  100% { translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-intro { transition: none; }
+  .site-intro__letter { animation: none; }
+}
+
+/* Header beranda: tanpa latar, tanpa garis, dan hurufnya menembus gambar di belakangnya. */
+.site-header--knockout {
+  background: transparent;
+  background-image: none;
+  border-bottom: 0;
+  mix-blend-mode: difference;
+}
+
+/* Dinding foto. Semua foto duduk di 110% supaya tepinya tidak pernah menyisakan latar.
+   Hover cukup membesarkan kotak tile-nya saja; foto di dalamnya tetap 110%. Foto di
+   tile lain turun ke 100% dan kotaknya tidak berubah ukuran. */
+.photo-wall [data-slot="photo-tile"] {
+  transition: opacity 300ms ease, scale 300ms ease;
+}
+.photo-wall [data-gallery-cycle] {
+  transition: padding-top 300ms ease-in-out;
+}
+html[data-site-menu="open"] .photo-wall [data-gallery-cycle] {
+  padding-top: calc(3.5rem + var(--site-menu-height, 0px));
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-wall [data-gallery-cycle] { transition: none; }
+}
+.photo-wall [data-slot="photo-tile"] img {
+  scale: 1.1;
+  transition: scale 400ms ease;
+}
+.photo-wall:not([data-opening]):not([data-idle-scrolling]):has([data-slot="photo-tile"]:is(:hover, :focus-visible)) [data-slot="photo-tile"]:not(:hover):not(:focus-visible) {
+  opacity: 0.5;
+}
+.photo-wall:not([data-opening]):not([data-idle-scrolling]):has([data-slot="photo-tile"]:is(:hover, :focus-visible)) [data-slot="photo-tile"]:not(:hover):not(:focus-visible) img {
+  scale: 1;
+}
+.photo-wall:not([data-opening]):not([data-idle-scrolling]) [data-slot="photo-tile"]:is(:hover, :focus-visible) {
+  opacity: 1;
+  scale: 1.03;
+  z-index: 10;
+}
+
+.photo-wall[data-opening] [data-slot="photo-tile"] > span:last-child { opacity: 0; }
+@media (hover: hover) {
+  .photo-wall[data-idle-scrolling] [data-slot="photo-tile"] > span:last-child { opacity: 0; }
+}
+.photo-wall[data-opening] [data-slot="photo-reveal"] { animation: none; }
+.photo-wall [data-gallery-tail] { display: none; }
+.photo-wall[data-opening] [data-gallery-tail] { display: block; }
+.photo-wall[data-opening=""] [data-gallery-cycle]:first-child [data-gallery-tail] {
+  visibility: hidden;
+}
+.photo-wall [data-gallery-tail] [data-slot="photo-reveal"] { animation: none; }
+.photo-wall [data-gallery-tail] a > span:last-child { display: none; }
+.photo-wall[data-opening="finishing"] [data-gallery-tail] {
+  animation: gallery-tail-exit 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes gallery-tail-exit {
+  to { translate: 0 -100%; }
+}
+
+/* Tile muncul saat memasuki viewport. Hanya jalan di browser yang mendukung
+   scroll-driven animation; kalau tidak, konten tetap tampil penuh tanpa animasi. */
+@supports (animation-timeline: view()) {
+  .photo-wall [data-slot="photo-reveal"] {
+    animation: photo-tile-reveal both linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+}
+@keyframes photo-tile-reveal {
+  from { opacity: 0.25; translate: 0 2.5rem; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-wall [data-slot="photo-tile"] {
+    transition: none;
+  }
+  .photo-wall [data-slot="photo-tile"] img {
+    transition: none;
+    scale: 1.1;
+  }
+  .photo-wall [data-slot="photo-reveal"] {
+    animation: none;
+  }
+}
+.admin-theme {
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-dm-sans);
+  --font-heading: var(--font-dm-sans);
+  --ivory: #F6F1E9;
+  --charcoal: #272521;
+  --line: #8F887E;
+  --focus: #272521;
+  --background: var(--ivory);
+  --foreground: var(--charcoal);
+  --card: var(--ivory);
+  --card-foreground: var(--charcoal);
+  --popover: var(--ivory);
+  --popover-foreground: var(--charcoal);
+  --primary: var(--charcoal);
+  --primary-foreground: var(--ivory);
+  --secondary: color-mix(in srgb, var(--ivory) 80%, var(--line));
+  --secondary-foreground: var(--charcoal);
+  --accent: color-mix(in srgb, var(--ivory) 85%, var(--line));
+  --accent-foreground: var(--charcoal);
+  --muted: color-mix(in srgb, var(--ivory) 85%, var(--line));
+  --muted-foreground: color-mix(in srgb, var(--charcoal) 65%, transparent);
+  --border: color-mix(in srgb, var(--line) 30%, transparent);
+  --input: color-mix(in srgb, var(--line) 40%, transparent);
+  --ring: var(--focus);
+  --sidebar: color-mix(in srgb, var(--ivory) 92%, var(--line));
+  --sidebar-foreground: var(--charcoal);
+  --sidebar-primary: color-mix(in srgb, var(--ivory) 80%, var(--line));
+  --sidebar-primary-foreground: var(--charcoal);
+  --sidebar-accent: color-mix(in srgb, var(--ivory) 80%, var(--line));
+  --sidebar-accent-foreground: var(--charcoal);
+  --sidebar-border: color-mix(in srgb, var(--line) 25%, transparent);
+  --sidebar-ring: var(--charcoal);
+}
+.admin-theme [data-slot="sidebar"] { --focus: var(--sidebar-ring); }
+.admin-theme,
+.admin-theme body {
+  background-color: var(--sidebar);
+  font-size: 14px;
+}
+
+[data-slot="select-content"] > span:has(svg),
+[data-slot="select-arrow"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+@media (min-width: 768px) and (pointer: fine) {
+  .admin-theme [data-slot="sidebar-menu-button"] { min-height: 30px; height: 30px; font-size: 14px; }
+  .admin-theme [data-slot="sidebar-menu-button"] svg { width: 16px; height: 16px; }
+  .admin-theme .admin-topbar :is(button, a, input) { min-height: 32px; height: 32px; font-size: 14px; }
+}
+.admin-theme nav[aria-label="Breadcrumb"] a { display: inline-flex; align-items: center; min-height: 28px; }
+.admin-theme nav[aria-label="Breadcrumb"] ol { font-size: 12px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+:is(.contact-form, .admin-form) .contact-field {
+  position: relative;
+  --floating-label-background: var(--background, var(--ivory));
+}
+.contact-form { --floating-label-background: var(--ivory); }
+.admin-form { --floating-label-background: var(--background, var(--ivory)); }
+/* .contact-field mendeklarasikan ulang var ini, dan --background global itu putih,
+   jadi tanpa baris ini kotak label mengapung tampil putih di atas latar ivory. */
+.contact-form .contact-field { --floating-label-background: var(--ivory); }
+:is(.contact-form, .admin-form) .contact-field :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-form-control]) {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  background-color: transparent !important;
+}
+:is(.contact-form, .admin-form) .contact-field__label {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 0.75rem;
+  max-width: calc(100% - 1.5rem);
+  padding: 0;
+  transform: translateY(-50%);
+  transform-origin: left center;
+  background: transparent;
+  color: var(--charcoal);
+  font-size: 0.875rem;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: top 150ms ease, left 150ms ease, font-size 150ms ease, background-color 150ms ease, padding 150ms ease;
+}
+:is(.contact-form, .admin-form) .contact-field--textarea .contact-field__label { top: 1.25rem; }
+:is(.contact-form, .admin-form) .contact-field:has(:focus) .contact-field__label,
+:is(.contact-form, .admin-form) .contact-field:has([data-state="open"]) .contact-field__label,
+:is(.contact-form, .admin-form) .contact-field:has([data-slot="input"]:not(:placeholder-shown)) .contact-field__label,
+:is(.contact-form, .admin-form) .contact-field:has([data-slot="textarea"]:not(:placeholder-shown)) .contact-field__label,
+:is(.contact-form, .admin-form) .contact-field[data-floating="true"] .contact-field__label {
+  top: 0;
+  left: calc(0.75rem - 0.25rem);
+  padding: 0 0.25rem;
+  background: var(--floating-label-background);
+  font-size: 0.75rem;
+}
+.admin-form .contact-field :is([data-slot="input"], [data-slot="textarea"])::placeholder { opacity: 0; }
+.contact-heading-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.15em;
+  margin-bottom: -0.15em;
+}
+.contact-page > .contact-motion {
+  padding-top: 0;
+  transition: padding-top 300ms ease-in-out;
+}
+html[data-site-menu="open"] .contact-page > .contact-motion {
+  padding-top: var(--site-menu-height, 0px);
+}
+.contact-heading-line > span { display: block; }
+.contact-motion[data-contact-motion] [data-contact-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 650ms ease var(--contact-reveal-delay, 0ms), transform 800ms cubic-bezier(0.22, 1, 0.36, 1) var(--contact-reveal-delay, 0ms);
+}
+.contact-motion[data-contact-motion] .contact-heading-line > span {
+  opacity: 1;
+  transform: translateY(115%);
+}
+.contact-motion[data-contact-motion] .contact-form__row { transform: none; }
+.contact-motion[data-contact-motion] [data-contact-visible],
+.contact-motion[data-contact-motion] .contact-heading-line > span[data-contact-visible],
+.contact-motion[data-contact-motion] [data-contact-reveal]:focus-within {
+  opacity: 1;
+  transform: none;
+}
+.contact-motion[data-contact-motion] [data-contact-visible] {
+  animation: contact-field-reveal 350ms cubic-bezier(0.22, 1, 0.36, 1) var(--contact-reveal-delay, 0ms) both;
+  transition: none;
+}
+.contact-motion[data-contact-motion] .contact-heading-line > span[data-contact-visible] {
+  animation: contact-title-reveal 1400ms cubic-bezier(0.22, 1, 0.36, 1) var(--contact-reveal-delay, 0ms) both;
+}
+.contact-motion[data-contact-motion] [data-contact-reveal]:focus-within,
+.contact-motion[data-contact-motion] [data-contact-interacted] {
+  animation: none;
+  transition: none;
+}
+@keyframes contact-field-reveal {
+  from { opacity: 0; transform: none; }
+  to { opacity: 1; transform: none; }
+}
+@keyframes contact-title-reveal {
+  from { transform: translateY(115%); }
+  to { transform: none; }
+}
+.contact-submit__clip { position: relative; display: block; overflow: hidden; line-height: 1.4; }
+.contact-submit__clip > span { display: block; transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1); }
+.contact-submit__clip > span:last-child { position: absolute; inset-inline: 0; top: 100%; }
+.contact-submit:is(:hover, :focus-visible):not(:disabled) .contact-submit__clip > span { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) {
+  .contact-motion[data-contact-motion] [data-contact-reveal],
+  .contact-motion[data-contact-motion] .contact-heading-line > span,
+  .contact-motion[data-contact-motion] .contact-heading-line > span[data-contact-visible] { opacity: 1; transform: none; transition: none; animation: none; }
+  .contact-submit .contact-submit__clip > span,
+  .contact-submit:is(:hover, :focus-visible):not(:disabled) .contact-submit__clip > span { transform: none; transition: none; }
+  .contact-page > .contact-motion { transition: none; }
+}
+.admin-form .contact-field :is([data-slot="input"], [data-slot="textarea"]):focus::placeholder { opacity: 1; }
+:is(.contact-form, .admin-form) .contact-field :is(input, textarea):-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--floating-label-background) inset !important;
+  -webkit-text-fill-color: var(--charcoal) !important;
+  caret-color: var(--charcoal) !important;
+}
+[data-slot="select-content"] {
+  width: var(--radix-select-trigger-width);
+  max-width: var(--radix-select-trigger-width);
+  box-sizing: border-box;
+}
+
+:where(
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  [data-slot="select-item"],
+  [data-slot="checkbox"],
+  [data-slot="popover-trigger"],
+  [data-form-control]
+):focus {
+  outline: none;
+  box-shadow: none;
+}
+:where(
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  [data-slot="checkbox"],
+  [data-slot="popover-trigger"],
+  [data-form-control]
+):focus:not([aria-invalid="true"]) {
+  border-color: var(--focus);
+}
+:where([data-form-control][data-day]):focus { border-width: 1px; }
+[data-cta] { min-width: 44px; min-height: 44px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
+
+.dark {
+  --background: oklch(0.153 0.006 107.1);
+  --foreground: oklch(0.988 0.003 106.5);
+  --card: oklch(0.228 0.013 107.4);
+  --card-foreground: oklch(0.988 0.003 106.5);
+  --popover: oklch(0.228 0.013 107.4);
+  --popover-foreground: oklch(0.988 0.003 106.5);
+  --primary: oklch(0.93 0.007 106.5);
+  --primary-foreground: oklch(0.228 0.013 107.4);
+  --secondary: oklch(0.286 0.016 107.4);
+  --secondary-foreground: oklch(0.988 0.003 106.5);
+  --muted: oklch(0.286 0.016 107.4);
+  --muted-foreground: oklch(0.737 0.021 106.9);
+  --accent: oklch(0.286 0.016 107.4);
+  --accent-foreground: oklch(0.988 0.003 106.5);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.58 0.031 107.3);
+  --chart-1: oklch(0.88 0.011 106.6);
+  --chart-2: oklch(0.58 0.031 107.3);
+  --chart-3: oklch(0.466 0.025 107.3);
+  --chart-4: oklch(0.394 0.023 107.4);
+  --chart-5: oklch(0.286 0.016 107.4);
+  --sidebar: oklch(0.228 0.013 107.4);
+  --sidebar-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-accent: oklch(0.286 0.016 107.4);
+  --sidebar-accent-foreground: oklch(0.988 0.003 106.5);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.58 0.031 107.3);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+  }
+  h1 {
+    font-size: clamp(2.25rem, 6vw, 4.5rem);
+    line-height: 1.05;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Admin content column: one thin, always-accurate scrollbar (native, no overlay thumb). */
+.admin-scroll {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.admin-scroll::-webkit-scrollbar { width: 6px; }
+.admin-scroll::-webkit-scrollbar-track { background: transparent; }
+.admin-scroll::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 9999px; }
+
+/* Toasts: every type (default, success, error, info, warning) uses the theme primary. */
+html [data-sonner-toaster] {
+  --normal-bg: var(--primary);
+  --normal-text: var(--primary-foreground);
+  --normal-border: var(--primary);
+  --success-bg: var(--primary);
+  --success-text: var(--primary-foreground);
+  --success-border: var(--primary);
+  --error-bg: var(--primary);
+  --error-text: var(--primary-foreground);
+  --error-border: var(--primary);
+  --info-bg: var(--primary);
+  --info-text: var(--primary-foreground);
+  --info-border: var(--primary);
+  --warning-bg: var(--primary);
+  --warning-text: var(--primary-foreground);
+  --warning-border: var(--primary);
+}
+
+html [data-sonner-toast] [data-description] {
+  color: color-mix(in oklab, var(--primary-foreground) 80%, transparent);
+}
+
+html [data-sonner-toast] [data-icon] {
+  color: currentColor;
+}
+
+/* One-page anchors scroll smoothly, unless the visitor asked for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Anchor targets clear the sticky public header. */
+#top, #portfolio, #about, #services, #contact {
+  scroll-margin-top: 5rem;
+}

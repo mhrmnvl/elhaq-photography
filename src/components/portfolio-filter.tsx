@@ -4,6 +4,7 @@ import * as React from "react";
 
 import {CloudinaryImage} from "@/components/cloudinary-image";
 import {EmptyState} from "@/components/data-state";
+import {Button} from "@/components/ui/button";
 import {Link} from "@/i18n/navigation";
 import type {AlbumCategory, Locale, PublicAlbumSummary} from "@/lib/domain";
 
@@ -27,24 +28,26 @@ export function PortfolioFilter({albums, locale, labels, allLabel, filterLabel, 
   return (
     <div className="space-y-10">
       <nav aria-label={filterLabel} className="flex flex-wrap gap-2">
-        <button
+        <Button
           type="button"
+          variant="outline"
           aria-pressed={selected === "all"}
-          className="min-h-11 border border-[var(--line)] px-4 py-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] aria-pressed:bg-[var(--charcoal)] aria-pressed:text-[var(--ivory)]"
+          className="border-[var(--line)] px-4 py-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] aria-pressed:bg-[var(--charcoal)] aria-pressed:text-[var(--ivory)]"
           onClick={() => setSelected("all")}
         >
           {allLabel}
-        </button>
+        </Button>
         {categoryOrder.map((category) => (
-          <button
+          <Button
             key={category}
             type="button"
+            variant="outline"
             aria-pressed={selected === category}
-            className="min-h-11 border border-[var(--line)] px-4 py-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] aria-pressed:bg-[var(--charcoal)] aria-pressed:text-[var(--ivory)]"
+            className="border-[var(--line)] px-4 py-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] aria-pressed:bg-[var(--charcoal)] aria-pressed:text-[var(--ivory)]"
             onClick={() => setSelected(category)}
           >
             {labels[category]}
-          </button>
+          </Button>
         ))}
       </nav>
 

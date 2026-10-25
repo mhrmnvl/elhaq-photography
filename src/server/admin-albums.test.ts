@@ -33,6 +33,7 @@ const base: AdminAlbum = {
   category: "wedding",
   title: {en: "Story", id: "Cerita"},
   story: {en: "Story", id: "Cerita"},
+  location: {en: "", id: ""},
   status: "draft",
   updatedAt: "2026-09-22T00:00:00.000Z",
   coverMediaId: "m1",
@@ -53,6 +54,8 @@ type FakeAlbumStore = {
     title_id: string;
     story_en: string;
     story_id: string;
+    location_en: string;
+    location_id: string;
     status: "draft" | "published";
     creation_key: string | null;
     updated_at: string;
@@ -84,6 +87,8 @@ function storeFor(album: AdminAlbum = base): FakeAlbumStore {
       title_id: album.title.id,
       story_en: album.story.en,
       story_id: album.story.id,
+      location_en: album.location.en,
+      location_id: album.location.id,
       status: album.status,
       creation_key: null,
       updated_at: album.updatedAt,
@@ -147,8 +152,10 @@ function transactionFor(store: FakeAlbumStore): <T>(work: (client: PoolClient) =
         store.row.title_id = String(values[3]);
         store.row.story_en = String(values[4]);
         store.row.story_id = String(values[5]);
-        store.row.cover_media_id = values[6] as string | null;
-        store.row.sort_order = Number(values[7]);
+        store.row.location_en = String(values[6]);
+        store.row.location_id = String(values[7]);
+        store.row.cover_media_id = values[8] as string | null;
+        store.row.sort_order = Number(values[9]);
         store.row.updated_at = new Date(Date.parse(store.row.updated_at) + 1).toISOString();
         return {rows: []};
       }
@@ -160,8 +167,10 @@ function transactionFor(store: FakeAlbumStore): <T>(work: (client: PoolClient) =
         store.row.title_id = String(values[4]);
         store.row.story_en = String(values[5]);
         store.row.story_id = String(values[6]);
-        store.row.cover_media_id = values[7] as string | null;
-        store.row.sort_order = Number(values[8]);
+        store.row.location_en = String(values[7]);
+        store.row.location_id = String(values[8]);
+        store.row.cover_media_id = values[9] as string | null;
+        store.row.sort_order = Number(values[10]);
         store.row.updated_at = new Date().toISOString();
         store.photos = [];
         return {rows: [store.row as unknown as T]};
@@ -317,6 +326,22 @@ test("rejects a stale album version before metadata mutation", async () => {
     sortOrder: base.sortOrder,
   }, dependencies)).rejects.toMatchObject({status: 409, code: "ALBUM_VERSION_CONFLICT"});
   expect(store.row).toEqual(before);
+});
+
+test("stores the album location on update", async () => {
+  const store = storeFor();
+  await updateAlbum(actor, base.id, {
+    slug: base.slug,
+    category: base.category,
+    title: base.title,
+    story: base.story,
+    location: {en: "Bandung", id: "Bandung"},
+    coverMediaId: base.coverMediaId,
+    sortOrder: base.sortOrder,
+  }, {transaction: transactionFor(store)});
+
+  expect(store.row.location_en).toBe("Bandung");
+  expect(store.row.location_id).toBe("Bandung");
 });
 
 test("updates the album version for metadata and photo mutations", async () => {

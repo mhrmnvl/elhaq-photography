@@ -8,6 +8,7 @@ const metadata: AlbumSaveMetadata = {
   category: "wedding",
   title: {en: "Story", id: "Cerita"},
   story: {en: "Story", id: "Cerita"},
+  location: {en: "", id: ""},
   coverMediaId: "m1",
   sortOrder: 0,
 };

@@ -642,6 +642,11 @@ test("reports pending cleanup when committed deletion cannot reach Cloudinary", 
 
   try {
     await expect(deleteMediaIfUnreferenced({userId: "admin-1", email: "admin@example.com", name: null}, mediaId, {
+      env: {
+        CLOUDINARY_CLOUD_NAME: "demo",
+        CLOUDINARY_API_KEY: "key",
+        CLOUDINARY_API_SECRET: "secret",
+      },
       cloudinary: {
         signRequest: () => "signature",
         resource: async () => ({}),

@@ -19,6 +19,8 @@ test("maps a missing cover to a null public asset", () => {
     category: "wedding",
     title_en: "Story",
     title_id: "Cerita",
+    location_en: "Bandung",
+    location_id: "Bandung",
     cover_id: null,
     cover_cloud_name: null,
     cover_public_id: null,
@@ -32,6 +34,7 @@ test("maps a missing cover to a null public asset", () => {
     slug: "story",
     category: "wedding",
     title: {en: "Story", id: "Cerita"},
+    location: {en: "Bandung", id: "Bandung"},
     cover: null,
   });
 });
@@ -43,6 +46,8 @@ test("maps a published album into safe public media fields", () => {
     category: "wedding",
     title_en: "Story",
     title_id: "Cerita",
+    location_en: "Bandung",
+    location_id: "Bandung",
     story_en: "A story",
     story_id: "Sebuah cerita",
     cover_id: "m1",
@@ -68,6 +73,7 @@ test("maps a published album into safe public media fields", () => {
     slug: "story",
     category: "wedding",
     title: {en: "Story", id: "Cerita"},
+    location: {en: "Bandung", id: "Bandung"},
     story: {en: "A story", id: "Sebuah cerita"},
     cover: {
       id: "m1",
@@ -203,6 +209,8 @@ test("rejects a media row that is missing required public fields", () => {
     category: "wedding",
     title_en: "Story",
     title_id: "Cerita",
+    location_en: "Bandung",
+    location_id: "Bandung",
     cover_id: "m1",
     cover_cloud_name: "demo",
     cover_public_id: "albums/story",

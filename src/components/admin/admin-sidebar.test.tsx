@@ -11,20 +11,21 @@ mock.module("next/navigation", () => ({
 }));
 
 const {AdminSidebar} = await import("@/components/admin/admin-sidebar");
+const {AdminBreadcrumbs} = await import("@/components/admin/admin-breadcrumbs");
 const {SidebarProvider} = await import("@/components/ui/sidebar");
 
-function renderSidebar(name: string | null): string {
+function renderSidebar(): string {
   return renderToStaticMarkup(
     React.createElement(
       SidebarProvider,
       null,
-      React.createElement(AdminSidebar, {name, collapsible: "icon"})
+      React.createElement(AdminSidebar, {collapsible: "icon"})
     )
   );
 }
 
 test("renders only real admin destinations and activates nested album route", () => {
-  const markup = renderSidebar("Admin name");
+  const markup = renderSidebar();
   const nav = markup.match(/<nav id="admin-navigation" aria-label="Admin navigation">([\s\S]*?)<\/nav>/)?.[1] ?? "";
 
   expect([...nav.matchAll(/href="([^"]+)"/g)].map(([, href]) => href)).toEqual([
@@ -39,12 +40,26 @@ test("renders only real admin destinations and activates nested album route", ()
   expect(markup).not.toContain("Acme Inc");
 });
 
+test("renders linked breadcrumb ancestors and marks current admin page", () => {
+  const markup = renderToStaticMarkup(React.createElement(AdminBreadcrumbs));
+  const nav = markup.match(/<nav aria-label="Breadcrumb"[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? "";
+
+  expect([...nav.matchAll(/href="([^"]+)"/g)].map(([, href]) => href)).toEqual([
+    "/admin",
+    "/admin/albums",
+  ]);
+  expect(nav).toContain('aria-current="page"');
+  expect(nav).toContain("Album details");
+  expect(nav).toContain("/");
+  expect(nav).not.toContain("lucide-chevron-right");
+});
+
 test("uses high-contrast project colors for the active navigation item", () => {
-  const markup = renderSidebar("Admin name");
+  const markup = renderSidebar();
   const activeLink = markup.match(/<a(?=[^>]*aria-current="page")[^>]*>/)?.[0] ?? "";
 
-  expect(activeLink).toContain("data-[active=true]:bg-sidebar-primary");
-  expect(activeLink).toContain("data-[active=true]:text-sidebar-primary-foreground");
+  expect(activeLink).toContain("data-active:bg-sidebar-primary");
+  expect(activeLink).toContain("data-active:text-sidebar-primary-foreground");
 });
 
 test("keeps the mobile sheet close control visible and easy to tap", async () => {
@@ -55,10 +70,24 @@ test("keeps the mobile sheet close control visible and easy to tap", async () =>
   expect(sidebarSource).toContain("[&>button]:min-w-11");
 });
 
-test("does not invent identity when admin name is absent", () => {
-  const markup = renderSidebar(null);
+test("places desktop sidebar toggle in the footer and removes profile actions", () => {
+  const markup = renderSidebar();
+  const footer = markup.slice(markup.indexOf('data-sidebar="footer"'));
+  const sidebarContainer = markup.match(/<div[^>]*data-slot="sidebar-container"[^>]*>/)?.[0] ?? "";
+
+  expect(markup).toContain('data-variant="sidebar"');
+  expect(sidebarContainer).toContain("group-data-[side=left]:border-r-0");
+  expect(sidebarContainer).not.toContain("group-data-[side=left]:border-r ");
+  expect(footer).toContain('aria-label="Collapse admin navigation"');
+  expect(footer).not.toContain("Sign out");
+  expect(footer).not.toContain("Admin name");
+});
+
+test("keeps profile identity and sign-out outside sidebar", () => {
+  const markup = renderSidebar();
 
   expect(markup).not.toContain("Signed in as");
   expect(markup).not.toContain("m@example.com");
   expect(markup).not.toContain("Avatar");
+  expect(markup).not.toContain("Sign out");
 });
